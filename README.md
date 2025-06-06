@@ -13,7 +13,6 @@ pip install -r requirements.txt
 Install `pre-commit` and enable the hooks:
 
 ```bash
-pip install pre-commit
 pre-commit install
 ```
 
@@ -37,6 +36,7 @@ You can also format the project using Ruff's formatter:
 ```bash
 ruff format .
 ```
+
 # Sumoracle
 
 This project uses Django. Unit tests are located in the `tests` application.
