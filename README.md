@@ -10,6 +10,12 @@ Install all requirements:
 pip install -r requirements.txt
 ```
 
+Install `pre-commit` and enable the hooks:
+
+```bash
+pre-commit install
+```
+
 ## Linting and Formatting
 
 Run ruff to check code style and `isort` to sort imports.
@@ -30,6 +36,7 @@ You can also format the project using Ruff's formatter:
 ```bash
 ruff format .
 ```
+
 # Sumoracle
 
 This project uses Django. Unit tests are located in the `tests` application.
