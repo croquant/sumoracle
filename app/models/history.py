@@ -1,7 +1,8 @@
 from django.db import models
 
 from .rikishi import Rikishi
-from .shared import Basho, Rank
+from .basho import Basho
+from .rank import Rank
 
 
 class BashoHistory(models.Model):

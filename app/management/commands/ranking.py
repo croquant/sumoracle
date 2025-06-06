@@ -9,7 +9,8 @@ from django.utils.text import slugify
 
 from app.models.history import RankingHistory
 from app.models.rikishi import Rikishi
-from app.models.shared import Basho, Rank
+from app.models.basho import Basho
+from app.models.rank import Rank
 from libs.sumoapi import SumoApiClient
 
 

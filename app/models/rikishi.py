@@ -2,7 +2,7 @@ import pycountry
 from django.db import models
 from django.utils.text import slugify
 
-from .shared import Rank
+from .rank import Rank
 
 
 class Heya(models.Model):
