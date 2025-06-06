@@ -6,9 +6,9 @@ from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
 
 from app.constants import DIVISION_LEVELS
-from app.models.rikishi import Heya, Rikishi, Shusshin
 from app.models.division import Division
 from app.models.rank import Rank
+from app.models.rikishi import Heya, Rikishi, Shusshin
 from libs.sumoapi import SumoApiClient
 
 
