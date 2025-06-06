@@ -10,6 +10,13 @@ Install all requirements:
 pip install -r requirements.txt
 ```
 
+Install `pre-commit` and enable the hooks:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
 ## Linting and Formatting
 
 Run ruff to check code style and `isort` to sort imports.
