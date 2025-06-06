@@ -1,4 +1,37 @@
+# Virtual environments
 .venv/
-db.sqlite3
+venv/
+env/
+
+# Python bytecode
 __pycache__/
+*.py[cod]
+
+# Django local database
+*.sqlite3
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Test artifacts
+.pytest_cache/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# Packaging
+*.egg-info/
+dist/
+build/
+
+# Static and media
+staticfiles/
+media/
+
+# macOS metadata
 .DS_Store
