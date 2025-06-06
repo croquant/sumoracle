@@ -1,11 +1,7 @@
 from django.db import models
 
-from app.constants import (
-    DIRECTION_NAMES,
-    DIRECTION_NAMES_SHORT,
-    RANK_NAMES,
-    RANK_NAMES_SHORT,
-)
+from app.constants import (DIRECTION_NAMES, DIRECTION_NAMES_SHORT, RANK_NAMES,
+                           RANK_NAMES_SHORT)
 
 from .division import Division
 

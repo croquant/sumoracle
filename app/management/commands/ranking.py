@@ -7,10 +7,10 @@ from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
-from app.models.history import RankingHistory
-from app.models.rikishi import Rikishi
 from app.models.basho import Basho
+from app.models.history import RankingHistory
 from app.models.rank import Rank
+from app.models.rikishi import Rikishi
 from libs.sumoapi import SumoApiClient
 
 
