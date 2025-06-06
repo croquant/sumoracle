@@ -7,7 +7,8 @@ from django.core.management.base import BaseCommand
 
 from app.constants import DIVISION_LEVELS
 from app.models.rikishi import Heya, Rikishi, Shusshin
-from app.models.shared import Division, Rank
+from app.models.division import Division
+from app.models.rank import Rank
 from libs.sumoapi import SumoApiClient
 
 
