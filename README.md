@@ -58,14 +58,12 @@ All tests live inside the `tests` application.
 
 ## Coverage reports
 
-To measure test coverage install the `coverage` package:
-```bash
-pip install coverage
-```
-Then run the suite with coverage enabled and generate an HTML summary:
+The `coverage` package is used to measure test coverage.
+
+To run the test suite with coverage enabled and print a summary:
 ```bash
 coverage run manage.py test
-coverage html
+coverage report -m
 ```
 Open `htmlcov/index.html` in a browser to inspect the report.
 
