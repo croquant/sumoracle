@@ -1,35 +1,13 @@
-DIVISION_LEVELS = [
-    ("Makuuchi", 1),
-    ("Juryo", 2),
-    ("Makushita", 3),
-    ("Sandanme", 4),
-    ("Jonidan", 5),
-    ("Jonokuchi", 6),
-    ("Mae-zumo", 7),
-    ("Banzuke-gai", 8),
+DIVISIONS = [
+    ("Makuuchi", "M", 1),
+    ("Juryo", "J", 2),
+    ("Makushita", "Ms", 3),
+    ("Sandanme", "Sd", 4),
+    ("Jonidan", "Jd", 5),
+    ("Jonokuchi", "Jk", 6),
+    ("Mae-zumo", "Mz", 7),
+    ("Banzuke-gai", "Bg", 8),
 ]
-
-DIVISION_NAMES = [
-    ("Makuuchi", "Makuuchi"),
-    ("Juryo", "Juryo"),
-    ("Makushita", "Makushita"),
-    ("Sandanme", "Sandanme"),
-    ("Jonidan", "Jonidan"),
-    ("Jonokuchi", "Jonokuchi"),
-    ("Mae-zumo", "Mae-zumo"),
-    ("Banzuke-gai", "Banzuke-gai"),
-]
-
-DIVISION_NAMES_SHORT = {
-    "Makuuchi": "M",
-    "Juryo": "J",
-    "Makushita": "Ms",
-    "Sandanme": "Sd",
-    "Jonidan": "Jd",
-    "Jonokuchi": "Jk",
-    "Mae-zumo": "Mz",
-    "Banzuke-gai": "Bg",
-}
 
 RANK_NAMES = [
     ("Yokozuna", "Yokozuna"),
@@ -79,3 +57,12 @@ RANKING_LEVELS = {
 DIRECTION_NAMES = [("East", "East"), ("West", "West")]
 
 DIRECTION_NAMES_SHORT = {"East": "E", "West": "W"}
+
+BASHO_NAMES = {
+    1: "Hastu",
+    3: "Haru",
+    5: "Natsu",
+    7: "Nagoya",
+    9: "Aki",
+    11: "Kyushu",
+}
