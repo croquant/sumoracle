@@ -62,17 +62,15 @@ class SumoApiClient:
         response.raise_for_status()
         return response.json()
 
-    async def get_rikishi_matches(self, rikishi_id, opponent_id=None):
+    async def get_rikishi_matches(self, rikishi_id, **params):
         """Return a list of matches for a rikishi.
 
-        If ``opponent_id`` is provided only bouts against that opponent are
-        returned.
+        Optional query parameters (e.g., ``bashoId``) are forwarded to the
+        API.
         """
 
         endpoint = f"/rikishi/{rikishi_id}/matches"
-        if opponent_id is not None:
-            endpoint += f"/{opponent_id}"
-        response = await self.client.get(endpoint)
+        response = await self.client.get(endpoint, params=params)
         response.raise_for_status()
         return response.json()
 
