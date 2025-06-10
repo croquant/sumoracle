@@ -77,7 +77,7 @@ class SumoApiClientTests(SimpleTestCase):
                 self.run_async(api.get_rikishi_matches(1)), {"matches": []}
             )
             self.assertEqual(
-                self.run_async(api.get_rikishi_matches(1, 2)),
+                self.run_async(api.get_rikishi_matches(1, basho_id="202505")),
                 {"matches": []},
             )
             self.assertEqual(
