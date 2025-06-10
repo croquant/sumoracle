@@ -11,7 +11,7 @@ from app.models.basho import Basho
 from app.models.history import BashoHistory
 from app.models.rank import Rank
 from app.models.rikishi import Rikishi
-from libs.sumoapi import SumoApiClient
+from libs.sumoapi import SumoApiClient, SumoApiError
 
 
 def pick_shikona(shikona_map, basho_slug):
@@ -56,7 +56,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE(message))
 
     def handle(self, *args, **kwargs):
-        asyncio.run(self._handle_async())
+        try:
+            asyncio.run(self._handle_async())
+        except SumoApiError as exc:
+            self.stderr.write(self.style.ERROR(str(exc)))
 
     async def _handle_async(self):
         async with SumoApiClient() as api:

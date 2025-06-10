@@ -9,7 +9,7 @@ from app.constants import DIVISION_LEVELS
 from app.models.division import Division
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
-from libs.sumoapi import SumoApiClient
+from libs.sumoapi import SumoApiClient, SumoApiError
 
 
 def clean_shusshin_name(name):
@@ -41,7 +41,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING(msg))
 
     def handle(self, *args, **kwargs):
-        asyncio.run(self._handle_async())
+        try:
+            asyncio.run(self._handle_async())
+        except SumoApiError as exc:
+            self.stderr.write(self.style.ERROR(str(exc)))
 
     async def _handle_async(self):
         async with SumoApiClient() as api:

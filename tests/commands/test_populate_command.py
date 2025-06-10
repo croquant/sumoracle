@@ -8,6 +8,7 @@ from django.test import SimpleTestCase
 from app.management.commands.populate import Command
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Shusshin
+from libs.sumoapi import SumoApiError
 
 
 class PopulateCommandTests(SimpleTestCase):
@@ -264,3 +265,28 @@ class PopulateCommandTests(SimpleTestCase):
         cmd.style = SimpleNamespace(WARNING=lambda m: m)
         cmd.warn("oops")
         self.assertIn("oops", output[-1])
+
+    def test_handle_api_error(self):
+        """Errors from the async handler should be reported."""
+        cmd = Command()
+        output = []
+        cmd.stderr = SimpleNamespace(write=lambda m: output.append(m))
+        cmd.style = SimpleNamespace(ERROR=lambda m: m)
+
+        def runner(c):
+            return asyncio.get_event_loop().run_until_complete(c)
+
+        with (
+            patch(
+                "app.management.commands.populate.asyncio.run",
+                side_effect=runner,
+            ) as run_mock,
+            patch.object(
+                Command,
+                "_handle_async",
+                new=AsyncMock(side_effect=SumoApiError("bad")),
+            ),
+        ):
+            cmd.handle()
+        self.assertTrue(run_mock.called)
+        self.assertIn("bad", output[-1])

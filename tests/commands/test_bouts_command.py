@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from django.test import SimpleTestCase
 
 from app.management.commands.bouts import Command
+from libs.sumoapi import SumoApiError
 
 
 class BoutsCommandTests(SimpleTestCase):
@@ -120,3 +121,36 @@ class BoutsCommandTests(SimpleTestCase):
             self.run_async(cmd._handle_async(1, None))
             create_mock.assert_not_awaited()
             self.assertIn("Imported 0 bouts", output[-1])
+
+    def test_handle_api_error(self):
+        """Handle should report API failures."""
+        cmd = Command()
+        output = []
+        cmd.stderr = SimpleNamespace(write=lambda m: output.append(m))
+        cmd.style = SimpleNamespace(ERROR=lambda m: m)
+
+        def runner(c):
+            return asyncio.get_event_loop().run_until_complete(c)
+
+        with (
+            patch(
+                "app.management.commands.bouts.asyncio.run",
+                side_effect=runner,
+            ) as run_mock,
+            patch.object(
+                Command,
+                "_handle_async",
+                new=AsyncMock(side_effect=SumoApiError("fail")),
+            ),
+        ):
+            cmd.handle()
+        self.assertTrue(run_mock.called)
+        self.assertIn("fail", output[-1])
+
+    def test_parser_arguments(self):
+        """Argument parser should accept rikishi and basho options."""
+        cmd = Command()
+        parser = cmd.create_parser("manage.py", "bouts")
+        args = parser.parse_args(["10", "--basho", "202501"])
+        self.assertEqual(args.rikishi_id, 10)
+        self.assertEqual(args.basho_id, "202501")

@@ -15,6 +15,7 @@ from app.management.commands.ranking import (
 from app.models.basho import Basho
 from app.models.rank import Rank
 from app.models.rikishi import Rikishi
+from libs.sumoapi import SumoApiError
 
 
 class RankingCommandTests(SimpleTestCase):
@@ -249,6 +250,31 @@ class RankingCommandTests(SimpleTestCase):
             self.assertTrue(a_mock.called)
         cmd.log("hello")
         self.assertEqual(output[-1], "hello")  # Message printed
+
+    def test_handle_api_error(self):
+        """Handle should report API failures."""
+        cmd = Command()
+        output = []
+        cmd.stderr = SimpleNamespace(write=lambda m: output.append(m))
+        cmd.style = SimpleNamespace(ERROR=lambda m: m)
+
+        def runner(c):
+            return asyncio.get_event_loop().run_until_complete(c)
+
+        with (
+            patch(
+                "app.management.commands.ranking.asyncio.run",
+                side_effect=runner,
+            ) as run_mock,
+            patch.object(
+                Command,
+                "_handle_async",
+                new=AsyncMock(side_effect=SumoApiError("oops")),
+            ),
+        ):
+            cmd.handle()
+        self.assertTrue(run_mock.called)
+        self.assertIn("oops", output[-1])
 
     def test_get_or_create_rank_variations(self):
         """Rank caching should prevent duplicate queries."""
