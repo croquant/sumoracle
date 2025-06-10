@@ -81,10 +81,10 @@ class PopulateCommandTests(SimpleTestCase):
 
             search_fuzzy.return_value = [SimpleNamespace(name="Japan")]
 
-            mock_client = AsyncMock()
-            client_cls.return_value = mock_client
-            mock_client.get_all_rikishi.return_value = rikishi_data
-            mock_client.aclose.return_value = None
+            mock_api = AsyncMock()
+            client_cls.return_value.__aenter__.return_value = mock_api
+            client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_all_rikishi.return_value = rikishi_data
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -94,7 +94,7 @@ class PopulateCommandTests(SimpleTestCase):
                 asyncio.set_event_loop(asyncio.new_event_loop())
                 loop.close()
 
-            mock_client.get_all_rikishi.assert_awaited_once()
+            mock_api.get_all_rikishi.assert_awaited_once()
             ro.abulk_create.assert_awaited_once()
             ro.abulk_update.assert_not_called()
 
@@ -152,10 +152,10 @@ class PopulateCommandTests(SimpleTestCase):
                 return_value=(Shusshin(name="S"), True)
             )
 
-            mock_client = AsyncMock()
-            client_cls.return_value = mock_client
-            mock_client.get_all_rikishi.return_value = rikishi_data
-            mock_client.aclose.return_value = None
+            mock_api = AsyncMock()
+            client_cls.return_value.__aenter__.return_value = mock_api
+            client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_all_rikishi.return_value = rikishi_data
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -237,10 +237,10 @@ class PopulateCommandTests(SimpleTestCase):
                 [SimpleNamespace(name="Mongolia")],
             ]
 
-            mock_client = AsyncMock()
-            client_cls.return_value = mock_client
-            mock_client.get_all_rikishi.return_value = rikishi_data
-            mock_client.aclose.return_value = None
+            mock_api = AsyncMock()
+            client_cls.return_value.__aenter__.return_value = mock_api
+            client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_all_rikishi.return_value = rikishi_data
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

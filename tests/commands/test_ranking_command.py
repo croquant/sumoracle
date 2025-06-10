@@ -96,7 +96,8 @@ class RankingCommandTests(SimpleTestCase):
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
-            mock_client_cls.return_value = mock_api
+            mock_client_cls.return_value.__aenter__.return_value = mock_api
+            mock_client_cls.return_value.__aexit__.return_value = None
             mock_api.get_ranking_history.return_value = {
                 1: [{"bashoId": "202501", "rank": "Y1E"}]
             }
@@ -108,7 +109,6 @@ class RankingCommandTests(SimpleTestCase):
                 }
             ]
             mock_api.get_basho_by_id.return_value = None
-            mock_api.aclose.return_value = None
 
             cmd = Command()
             cmd.log = lambda *a, **k: None
@@ -156,7 +156,8 @@ class RankingCommandTests(SimpleTestCase):
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
-            mock_client_cls.return_value = mock_api
+            mock_client_cls.return_value.__aenter__.return_value = mock_api
+            mock_client_cls.return_value.__aexit__.return_value = None
             mock_api.get_ranking_history.return_value = {
                 1: [{"bashoId": "202504", "rank": "Y1E"}]
             }
@@ -164,7 +165,6 @@ class RankingCommandTests(SimpleTestCase):
                 {"bashoId": "202503", "shikonaEn": "Later", "shikonaJp": "後"}
             ]
             mock_api.get_basho_by_id.return_value = None
-            mock_api.aclose.return_value = None
 
             cmd = Command()
             cmd.log = lambda *a, **k: None
@@ -212,7 +212,8 @@ class RankingCommandTests(SimpleTestCase):
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
-            mock_client_cls.return_value = mock_api
+            mock_client_cls.return_value.__aenter__.return_value = mock_api
+            mock_client_cls.return_value.__aexit__.return_value = None
             mock_api.get_ranking_history.return_value = {
                 1: [{"bashoId": "202501", "rank": "Y1E"}]
             }
@@ -220,7 +221,6 @@ class RankingCommandTests(SimpleTestCase):
                 {"bashoId": "202503", "shikonaEn": "Future", "shikonaJp": "未"}
             ]
             mock_api.get_basho_by_id.return_value = None
-            mock_api.aclose.return_value = None
 
             cmd = Command()
             cmd.log = lambda *a, **k: None
@@ -323,7 +323,8 @@ class RankingCommandTests(SimpleTestCase):
             ),
         ):
             api = AsyncMock()
-            client_cls.return_value = api
+            client_cls.return_value.__aenter__.return_value = api
+            client_cls.return_value.__aexit__.return_value = None
             api.get_ranking_history.return_value = {1: entries}
             api.get_shikonas.return_value = []
             api.get_basho_by_id.side_effect = [
@@ -334,7 +335,6 @@ class RankingCommandTests(SimpleTestCase):
                 },
                 None,
             ]
-            api.aclose.return_value = None
             cmd = Command()
             cmd.log = lambda *a, **k: None
             cmd.create_basho_from_api = AsyncMock(
