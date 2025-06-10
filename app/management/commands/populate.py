@@ -178,7 +178,7 @@ class Command(BaseCommand):
             self.log(f"Created {len(new_rikishi)} new rikishi.")
 
         if updated_rikishi:
-            await Rikishi.objects.bulk_update(
+            await Rikishi.objects.abulk_update(
                 updated_rikishi,
                 fields=[
                     "sumodb_id",
