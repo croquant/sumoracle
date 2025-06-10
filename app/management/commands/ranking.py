@@ -14,6 +14,20 @@ from app.models.rikishi import Rikishi
 from libs.sumoapi import SumoApiClient
 
 
+def pick_shikona(shikona_map, basho_slug):
+    """Return shikona for ``basho_slug`` or fallback to the latest available."""
+    record = shikona_map.get(basho_slug)
+    if record and (record.get("shikonaEn") or record.get("shikonaJp")):
+        return record
+
+    for key in sorted(shikona_map.keys(), reverse=True):
+        rec = shikona_map[key]
+        if rec.get("shikonaEn") or rec.get("shikonaJp"):
+            return rec
+
+    return {}
+
+
 @sync_to_async
 def get_rikishis():
     return list(Rikishi.objects.only("id", "name"))
@@ -113,8 +127,8 @@ class Command(BaseCommand):
                         rank_str, existing_rank
                     )
 
-                    shikona_data = shikona_cache.get(rikishi.id, {}).get(
-                        basho_slug, {}
+                    shikona_data = pick_shikona(
+                        shikona_cache.get(rikishi.id, {}), basho_slug
                     )
                     ranking_history_to_create.append(
                         BashoHistory(
