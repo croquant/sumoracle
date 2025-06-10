@@ -45,6 +45,7 @@ of sync.
    coverage run manage.py test
    coverage report -m
    ```
+   Coverage must be at least 95%, matching `fail_under` in `pyproject.toml`.
 3. **Run pre-commit hooks** (if installed)
    ```bash
    pre-commit run --all-files
