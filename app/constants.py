@@ -1,28 +1,38 @@
-DIVISIONS = [
-    ("Makuuchi", "M", 1),
-    ("Juryo", "J", 2),
-    ("Makushita", "Ms", 3),
-    ("Sandanme", "Sd", 4),
-    ("Jonidan", "Jd", 5),
-    ("Jonokuchi", "Jk", 6),
-    ("Mae-zumo", "Mz", 7),
-    ("Banzuke-gai", "Bg", 8),
-]
+from enum import Enum
 
-RANK_NAMES = [
-    ("Yokozuna", "Yokozuna"),
-    ("Ozeki", "Ozeki"),
-    ("Sekiwake", "Sekiwake"),
-    ("Komusubi", "Komusubi"),
-    ("Maegashira", "Maegashira"),
-    ("Juryo", "Juryo"),
-    ("Makushita", "Makushita"),
-    ("Sandanme", "Sandanme"),
-    ("Jonidan", "Jonidan"),
-    ("Jonokuchi", "Jonokuchi"),
-    ("Mae-zumo", "Mae-zumo"),
-    ("Banzuke-gai", "Banzuke-gai"),
-]
+from django.db import models
+
+
+class DivisionEnum(Enum):
+    MAKUUCHI = ("Makuuchi", "M", 1)
+    JURYO = ("Juryo", "J", 2)
+    MAKUSHITA = ("Makushita", "Ms", 3)
+    SANDANME = ("Sandanme", "Sd", 4)
+    JONIDAN = ("Jonidan", "Jd", 5)
+    JONOKUCHI = ("Jonokuchi", "Jk", 6)
+    MAEZUMO = ("Mae-zumo", "Mz", 7)
+    BANZUKE_GAI = ("Banzuke-gai", "Bg", 8)
+
+    def __init__(self, label: str, short: str, level: int) -> None:
+        self.label = label
+        self.short = short
+        self.level = level
+
+
+class RankName(models.TextChoices):
+    YOKOZUNA = "Yokozuna", "Yokozuna"
+    OZEKI = "Ozeki", "Ozeki"
+    SEKIWAKE = "Sekiwake", "Sekiwake"
+    KOMUSUBI = "Komusubi", "Komusubi"
+    MAEGASHIRA = "Maegashira", "Maegashira"
+    JURYO = "Juryo", "Juryo"
+    MAKUSHITA = "Makushita", "Makushita"
+    SANDANME = "Sandanme", "Sandanme"
+    JONIDAN = "Jonidan", "Jonidan"
+    JONOKUCHI = "Jonokuchi", "Jonokuchi"
+    MAEZUMO = "Mae-zumo", "Mae-zumo"
+    BANZUKE_GAI = "Banzuke-gai", "Banzuke-gai"
+
 
 RANK_NAMES_SHORT = {
     "Yokozuna": "Y",
@@ -54,7 +64,11 @@ RANKING_LEVELS = {
     "Banzuke-gai": 12,
 }
 
-DIRECTION_NAMES = [("East", "East"), ("West", "West")]
+
+class Direction(models.TextChoices):
+    EAST = "East", "East"
+    WEST = "West", "West"
+
 
 DIRECTION_NAMES_SHORT = {"East": "E", "West": "W"}
 
