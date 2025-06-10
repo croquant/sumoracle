@@ -33,7 +33,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           coverage run manage.py test
-          coverage report
+          coverage report -m
       - name: Coverage comment
         id: coverage_comment
         uses: py-cov-action/python-coverage-comment-action@v3
