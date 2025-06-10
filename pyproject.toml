@@ -19,6 +19,7 @@ relative_files = true
 [tool.coverage.report]
 omit = ["*/migrations/*", "manage.py", "tests/*"]
 fail_under = 95
+skip_empty = false
 
 [tool.isort]
 profile = "django"
