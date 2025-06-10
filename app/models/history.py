@@ -6,6 +6,8 @@ from .rikishi import Rikishi
 
 
 class BashoHistory(models.Model):
+    """Ranking and measurements for a rikishi in a specific ``Basho``."""
+
     pk = models.CompositePrimaryKey("rikishi_id", "basho_id")
     rikishi = models.ForeignKey(
         Rikishi,

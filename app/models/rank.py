@@ -11,6 +11,8 @@ from .division import Division
 
 
 class Rank(models.Model):
+    """Individual rank within a ``Division`` including order and direction."""
+
     slug = models.SlugField(primary_key=True, editable=False)
 
     division = models.ForeignKey(
