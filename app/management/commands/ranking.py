@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
 from app.models.basho import Basho
-from app.models.history import RankingHistory
+from app.models.history import BashoHistory
 from app.models.rank import Rank
 from app.models.rikishi import Rikishi
 from libs.sumoapi import SumoApiClient
@@ -31,7 +31,7 @@ def get_existing_rank():
 
 @sync_to_async
 def get_existing_keys():
-    return set(RankingHistory.objects.values_list("rikishi_id", "basho__slug"))
+    return set(BashoHistory.objects.values_list("rikishi_id", "basho__slug"))
 
 
 class Command(BaseCommand):
@@ -98,7 +98,7 @@ class Command(BaseCommand):
                     )
 
                     ranking_history_to_create.append(
-                        RankingHistory(rikishi=rikishi, basho=basho, rank=rank)
+                        BashoHistory(rikishi=rikishi, basho=basho, rank=rank)
                     )
 
             if len(ranking_history_to_create) >= 1000:
@@ -150,5 +150,5 @@ class Command(BaseCommand):
         return rank
 
     async def bulk_save(self, objs):
-        self.log(f"Inserting {len(objs)} RankingHistory objects...")
-        await RankingHistory.objects.abulk_create(objs, batch_size=500)
+        self.log(f"Inserting {len(objs)} BashoHistory objects...")
+        await BashoHistory.objects.abulk_create(objs, batch_size=500)
