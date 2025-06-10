@@ -1,71 +1,58 @@
 # Mission
+Fix or extend the codebase without breaking the axioms.
 
-Autonomously fix or extend the codebase without violating the axioms.
-
-## Repository Overview
-
-- Django application. Async commands and HTTP client in `libs/sumoapi.py`.
-- Tests live in `tests/`.
-- Ruff and isort handle linting and formatting.
-- Requires Python 3.12 or later.
+## Overview
+- Django project (Python >=3.12)
+- Async commands + HTTP client in `libs/sumoapi.py`
+- Tests in `tests/`
+- Formatting via Ruff and isort
 
 ## CLI First
+Use shell tools (`ls`, `tree`, `rg`, `awk`, `curl`). Automate with `scripts/*.sh` when useful.
 
-Work from the shell using tools like `ls`, `tree`, `grep`/`rg`, `awk`, and
-`curl`. Automate recurring checks in `scripts/*.sh` when possible.
-
-## Explore & Map (run before planning)
-
+## Quick Explore (run before planning)
 ```bash
 ls -1
 tree -L 2 | head -n 40
 rg -i "^(def main|class .*Config)" -g '*.py'
 rg -i '(test_)\w+' tests/
 ```
-
-Identify entry points (`manage.py`, `config/settings.py`), core models and
-management commands.
+Identify entry points (`manage.py`, `config/settings.py`), models and commands.
 
 ## Canonical Truth
-
-Code overrides docs. Update documentation or open an issue if anything is out
-of sync.
+Code beats docs. Update docs or open an issue if they diverge.
 
 ## Workflow
+### Format & Lint
+```bash
+ruff check .
+isort .
+ruff --fix .
+ruff format .
+```
+### Tests
+```bash
+coverage run manage.py test
+coverage report -m
+```
+Must reach 95% coverage (`fail_under` in `pyproject.toml`).
+### Pre-commit (if installed)
+```bash
+pre-commit install
+pre-commit run --all-files
+```
+### Commit
+Keep changes focused with clear messages.
 
-1. **Format and lint**
-   ```bash
-   ruff check .
-   isort .
-   ruff --fix .
-   ruff format .
-   ```
-2. **Run tests with coverage**
-   ```bash
-   coverage run manage.py test
-   coverage report -m
-   ```
-   Coverage must be at least 95%, matching `fail_under` in `pyproject.toml`.
-3. **Run pre-commit hooks** (if installed)
-   ```bash
-   pre-commit install
-   pre-commit run --all-files
-   ```
-4. **Commit** focused changes with a descriptive message.
+## Loop
+EXPLORE → PLAN → ACT → OBSERVE → REFLECT → COMMIT. Keep tests green.
 
-## Workflow Loop
+## Style
+- 80 char lines (`ruff.toml`)
+- Prefer async/await
 
-EXPLORE → PLAN → ACT → OBSERVE → REFLECT → COMMIT. Keep commits small and
-ensure tests remain green.
-
-## Coding Style
-
-- Line length is 80 characters (`ruff.toml`).
-- Prefer async/await where appropriate.
-
-## Repository Layout
-
-- `app/models/` – Django models.
-- `app/management/commands/` – asynchronous commands.
-- `libs/sumoapi.py` – async client for the Sumo API.
-- `tests/` – unit tests.
+## Layout
+- `app/models/` – Django models
+- `app/management/commands/` – async commands
+- `libs/sumoapi.py` – API client
+- `tests/` – unit tests
