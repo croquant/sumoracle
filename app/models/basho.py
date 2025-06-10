@@ -25,6 +25,11 @@ class Basho(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = f"{self.year}{self.month:02d}"
+        super().save(*args, **kwargs)
+
     def name(self):
         return BASHO_NAMES[self.month]
 

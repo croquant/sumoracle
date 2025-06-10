@@ -15,6 +15,13 @@ class ModelUtilityTests(SimpleTestCase):
         self.assertEqual(basho.name(), "Hastu")
         self.assertEqual(str(basho), "Hastu 2025")
 
+    def test_basho_slug_generation(self):
+        basho = Basho(year=2025, month=3)
+        with patch("django.db.models.Model.save") as mock_save:
+            basho.save()
+            mock_save.assert_called_once()
+        self.assertEqual(basho.slug, "202503")
+
     def test_rank_methods(self):
         division = Division(name="Makuuchi", name_short="M", level=1)
         rank = Rank(
