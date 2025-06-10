@@ -26,10 +26,10 @@ This project requires **Python 3.12** or later.
    ```bash
    python manage.py migrate
    ```
-5. (Optional) populate the database with data from the Sumo API:
+5. (Optional) populate the database using these commands:
    ```bash
-   python manage.py populate
-   python manage.py ranking
+   python manage.py populate  # fetches rikishi data and fills the DB
+   python manage.py ranking   # imports ranking history for all rikishi
    ```
 
 ## Running the development server
