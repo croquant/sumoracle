@@ -65,9 +65,9 @@ class BoutsCommandTests(SimpleTestCase):
             patches[4] as create_mock,
         ):
             api = AsyncMock()
-            client_cls.return_value = api
+            client_cls.return_value.__aenter__.return_value = api
+            client_cls.return_value.__aexit__.return_value = None
             api.get_rikishi_matches.return_value = {"records": [record]}
-            api.aclose.return_value = None
             cmd = Command()
             cmd.stdout = SimpleNamespace(write=lambda msg: None)
             cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
@@ -90,9 +90,9 @@ class BoutsCommandTests(SimpleTestCase):
             patches[4],
         ):
             api = AsyncMock()
-            client_cls.return_value = api
+            client_cls.return_value.__aenter__.return_value = api
+            client_cls.return_value.__aexit__.return_value = None
             api.get_rikishi_matches.return_value = {"records": [record]}
-            api.aclose.return_value = None
             cmd = Command()
             cmd.stdout = SimpleNamespace(write=lambda msg: None)
             cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
@@ -110,9 +110,9 @@ class BoutsCommandTests(SimpleTestCase):
             patches[4] as create_mock,
         ):
             api = AsyncMock()
-            client_cls.return_value = api
+            client_cls.return_value.__aenter__.return_value = api
+            client_cls.return_value.__aexit__.return_value = None
             api.get_rikishi_matches.return_value = {"records": []}
-            api.aclose.return_value = None
             output = []
             cmd = Command()
             cmd.stdout = SimpleNamespace(write=lambda msg: output.append(msg))

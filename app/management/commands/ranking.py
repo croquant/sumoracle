@@ -59,30 +59,29 @@ class Command(BaseCommand):
         asyncio.run(self._handle_async())
 
     async def _handle_async(self):
-        api = SumoApiClient()
+        async with SumoApiClient() as api:
+            self.log("Prefetching database objects...")
+            rikishis = await get_rikishis()
+            existing_basho = await get_existing_basho()
+            existing_rank = await get_existing_rank()
+            existing_keys = await get_existing_keys()
+            shikona_cache = {}
 
-        self.log("Prefetching database objects...")
-        rikishis = await get_rikishis()
-        existing_basho = await get_existing_basho()
-        existing_rank = await get_existing_rank()
-        existing_keys = await get_existing_keys()
-        shikona_cache = {}
+            BATCH_SIZE = 50
+            ranking_history_to_create = []
 
-        BATCH_SIZE = 50
-        ranking_history_to_create = []
-
-        for i in range(0, len(rikishis), BATCH_SIZE):
-            batch = rikishis[i : i + BATCH_SIZE]
-            self.log(
-                (
-                    f"Processing batch {i // BATCH_SIZE + 1}/"
-                    f"{(len(rikishis) + BATCH_SIZE - 1) // BATCH_SIZE}"
+            for i in range(0, len(rikishis), BATCH_SIZE):
+                batch = rikishis[i : i + BATCH_SIZE]
+                self.log(
+                    (
+                        f"Processing batch {i // BATCH_SIZE + 1}/"
+                        f"{(len(rikishis) + BATCH_SIZE - 1) // BATCH_SIZE}"
+                    )
                 )
-            )
 
-            ranking_histories = await api.get_ranking_history(
-                [r.id for r in batch]
-            )
+                ranking_histories = await api.get_ranking_history(
+                    [r.id for r in batch]
+                )
 
             # Fetch shikona history for rikishi in this batch if not cached
             shikona_tasks = {
@@ -141,19 +140,18 @@ class Command(BaseCommand):
                         )
                     )
 
-            if len(ranking_history_to_create) >= 1000:
+                if len(ranking_history_to_create) >= 1000:
+                    await self.bulk_save(ranking_history_to_create)
+                    ranking_history_to_create.clear()
+                    existing_keys = await get_existing_keys()
+
+            if ranking_history_to_create:
                 await self.bulk_save(ranking_history_to_create)
-                ranking_history_to_create.clear()
-                existing_keys = await get_existing_keys()
+                self.log(
+                    f"Inserted final {len(ranking_history_to_create)} records."
+                )
 
-        if ranking_history_to_create:
-            await self.bulk_save(ranking_history_to_create)
-            self.log(
-                f"Inserted final {len(ranking_history_to_create)} records."
-            )
-
-        await api.aclose()
-        self.log("✅ Ranking history import completed.")
+            self.log("✅ Ranking history import completed.")
 
     async def create_basho_from_api(self, basho_data):
         slug = basho_data["date"]

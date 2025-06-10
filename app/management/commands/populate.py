@@ -44,13 +44,11 @@ class Command(BaseCommand):
         asyncio.run(self._handle_async())
 
     async def _handle_async(self):
-        api = SumoApiClient()
-
-        await self._populate_divisions()
-        self.log("Fetching rikishi from API...")
-        rikishi_data = await api.get_all_rikishi()
-        await api.aclose()
-        self.log(f"Fetched {len(rikishi_data)} rikishi.")
+        async with SumoApiClient() as api:
+            await self._populate_divisions()
+            self.log("Fetching rikishi from API...")
+            rikishi_data = await api.get_all_rikishi()
+            self.log(f"Fetched {len(rikishi_data)} rikishi.")
 
         # Prefetch caches
         existing_rikishi = await sync_to_async(
