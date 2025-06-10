@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 
 from app.constants import Direction, RankName
 from app.models.basho import Basho
+from app.models.bout import Bout
 from app.models.division import Division
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
@@ -74,3 +75,22 @@ class ModelUtilityTests(SimpleTestCase):
         from app.models import history as mod
 
         self.assertTrue(hasattr(mod, "BashoHistory"))
+
+    def test_bout_str(self):
+        basho = Basho(year=2025, month=5, slug="202505")
+        division = Division(name="Makuuchi", name_short="M", level=1)
+        east = Rikishi(id=1, name="East", name_jp="")
+        west = Rikishi(id=2, name="West", name_jp="")
+        bout = Bout(
+            basho=basho,
+            division=division,
+            day=1,
+            match_no=1,
+            east=east,
+            west=west,
+            east_shikona="East",
+            west_shikona="West",
+            kimarite="yorikiri",
+            winner=east,
+        )
+        self.assertIn("202505", str(bout))
