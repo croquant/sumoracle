@@ -96,3 +96,73 @@ class PopulateCommandTests(SimpleTestCase):
             mock_client.get_all_rikishi.assert_awaited_once()
             ro.abulk_create.assert_awaited_once()
             ro.abulk_update.assert_not_called()
+
+    def test_updates_existing_rikishi(self):
+        """Existing entries should trigger bulk update."""
+        rikishi_data = [
+            {
+                "id": 1,
+                "sumodbId": "1",
+                "nskId": 1,
+                "shikonaEn": "Test",
+                "currentRank": "Yokozuna",
+            }
+        ]
+
+        def passthrough(func):
+            async def inner(*args, **kwargs):
+                return func()
+
+            return inner
+
+        existing = SimpleNamespace(id=1)
+        async_mock = AsyncMock
+        with (
+            patch(
+                "app.management.commands.populate.SumoApiClient",
+            ) as client_cls,
+            patch(
+                "app.management.commands.populate.sync_to_async",
+                side_effect=passthrough,
+            ),
+            patch(
+                "app.management.commands.populate.Division.objects.aget_or_create",
+                new=async_mock(),
+            ),
+            patch("app.management.commands.populate.Rikishi.objects") as ro,
+            patch("app.management.commands.populate.Rank.objects") as rao,
+            patch("app.management.commands.populate.Heya.objects") as ho,
+            patch("app.management.commands.populate.Shusshin.objects") as so,
+        ):
+            ro.all.return_value = [existing]
+            ro.abulk_create = async_mock()
+            ro.abulk_update = async_mock()
+
+            rao.all.return_value = []
+            rao.aget_or_create = async_mock(
+                return_value=(Rank(title="Yokozuna"), True)
+            )
+
+            ho.all.return_value = []
+            ho.aget_or_create = async_mock(return_value=(Heya(name="H"), True))
+
+            so.all.return_value = []
+            so.aget_or_create = async_mock(
+                return_value=(Shusshin(name="S"), True)
+            )
+
+            mock_client = AsyncMock()
+            client_cls.return_value = mock_client
+            mock_client.get_all_rikishi.return_value = rikishi_data
+            mock_client.aclose.return_value = None
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                call_command("populate")
+            finally:
+                asyncio.set_event_loop(asyncio.new_event_loop())
+                loop.close()
+
+            ro.abulk_create.assert_not_called()
+            ro.abulk_update.assert_awaited_once()
