@@ -19,4 +19,3 @@ class DivisionListViewTests(TestCase):
             response.context["object_list"].count(),
             Division.objects.count(),
         )
-

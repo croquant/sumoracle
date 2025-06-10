@@ -12,7 +12,9 @@ class BashoHistory(models.Model):
         on_delete=models.CASCADE,
         related_name="ranking_history",
     )
-    basho = models.ForeignKey(Basho, on_delete=models.CASCADE, related_name="ranking")
+    basho = models.ForeignKey(
+        Basho, on_delete=models.CASCADE, related_name="ranking"
+    )
     rank = models.ForeignKey(
         Rank,
         on_delete=models.CASCADE,

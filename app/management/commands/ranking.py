@@ -58,10 +58,15 @@ class Command(BaseCommand):
         for i in range(0, len(rikishis), BATCH_SIZE):
             batch = rikishis[i : i + BATCH_SIZE]
             self.log(
-                f"Processing batch {i // BATCH_SIZE + 1}/{(len(rikishis) + BATCH_SIZE - 1) // BATCH_SIZE}"
+                (
+                    f"Processing batch {i // BATCH_SIZE + 1}/"
+                    f"{(len(rikishis) + BATCH_SIZE - 1) // BATCH_SIZE}"
+                )
             )
 
-            ranking_histories = await api.get_ranking_history([r.id for r in batch])
+            ranking_histories = await api.get_ranking_history(
+                [r.id for r in batch]
+            )
 
             for rikishi in batch:
                 history = ranking_histories.get(rikishi.id, [])
@@ -88,7 +93,9 @@ class Command(BaseCommand):
                     else:
                         basho = existing_basho[basho_slug]
 
-                    rank = await self.get_or_create_rank(rank_str, existing_rank)
+                    rank = await self.get_or_create_rank(
+                        rank_str, existing_rank
+                    )
 
                     ranking_history_to_create.append(
                         RankingHistory(rikishi=rikishi, basho=basho, rank=rank)
@@ -101,7 +108,9 @@ class Command(BaseCommand):
 
         if ranking_history_to_create:
             await self.bulk_save(ranking_history_to_create)
-            self.log(f"Inserted final {len(ranking_history_to_create)} records.")
+            self.log(
+                f"Inserted final {len(ranking_history_to_create)} records."
+            )
 
         await api.aclose()
         self.log("✅ Ranking history import completed.")
@@ -112,8 +121,12 @@ class Command(BaseCommand):
             slug=slug,
             year=int(slug[:4]),
             month=int(slug[-2:]),
-            start_date=datetime.strptime(basho_data["startDate"], "%Y-%m-%dT%H:%M:%SZ"),
-            end_date=datetime.strptime(basho_data["endDate"], "%Y-%m-%dT%H:%M:%SZ"),
+            start_date=datetime.strptime(
+                basho_data["startDate"], "%Y-%m-%dT%H:%M:%SZ"
+            ),
+            end_date=datetime.strptime(
+                basho_data["endDate"], "%Y-%m-%dT%H:%M:%SZ"
+            ),
         )
 
     async def get_or_create_rank(self, rank_string, rank_cache):

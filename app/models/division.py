@@ -7,7 +7,9 @@ class Division(models.Model):
     name = models.CharField(
         verbose_name="name", primary_key=True, max_length=12, unique=True
     )
-    name_short = models.CharField(verbose_name="short name", max_length=2, unique=True)
+    name_short = models.CharField(
+        verbose_name="short name", max_length=2, unique=True
+    )
     level = models.PositiveSmallIntegerField(verbose_name="level", unique=True)
 
     class Meta:

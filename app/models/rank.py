@@ -1,7 +1,11 @@
 from django.db import models
 
-from app.constants import (DIRECTION_NAMES, DIRECTION_NAMES_SHORT, RANK_NAMES,
-                           RANK_NAMES_SHORT)
+from app.constants import (
+    DIRECTION_NAMES,
+    DIRECTION_NAMES_SHORT,
+    RANK_NAMES,
+    RANK_NAMES_SHORT,
+)
 
 from .division import Division
 
@@ -17,7 +21,9 @@ class Rank(models.Model):
     )
     title = models.CharField(max_length=20, choices=RANK_NAMES, editable=False)
     level = models.PositiveSmallIntegerField(editable=False)
-    order = models.PositiveSmallIntegerField(null=True, blank=True, editable=False)
+    order = models.PositiveSmallIntegerField(
+        null=True, blank=True, editable=False
+    )
     direction = models.CharField(
         max_length=4,
         choices=DIRECTION_NAMES,

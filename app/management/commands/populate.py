@@ -60,14 +60,17 @@ class Command(BaseCommand):
 
         rank_cache = await sync_to_async(
             lambda: {
-                tuple([r.title, r.order, r.direction]): r for r in Rank.objects.all()
+                tuple([r.title, r.order, r.direction]): r
+                for r in Rank.objects.all()
             }
         )()
         heya_cache = await sync_to_async(
             lambda: {h.name: h for h in Heya.objects.all()}
         )()
         shusshin_cache = await sync_to_async(
-            lambda: {(s.name, s.international): s for s in Shusshin.objects.all()}
+            lambda: {
+                (s.name, s.international): s for s in Shusshin.objects.all()
+            }
         )()
 
         new_rikishi = []
@@ -82,7 +85,11 @@ class Command(BaseCommand):
                 continue
 
             is_new = rikishi_id not in existing_ids
-            rikishi = Rikishi(id=rikishi_id) if is_new else existing_rikishi[rikishi_id]
+            rikishi = (
+                Rikishi(id=rikishi_id)
+                if is_new
+                else existing_rikishi[rikishi_id]
+            )
 
             # Fields
             rikishi.sumodb_id = data.get("sumodbId")
@@ -91,7 +98,9 @@ class Command(BaseCommand):
             rikishi.name_jp = data.get("shikonaJp") or ""
             rikishi.height = data.get("height")
             rikishi.weight = data.get("weight")
-            rikishi.birth_date = parse_date(data.get("birthDate"), "%Y-%m-%dT%H:%M:%SZ")
+            rikishi.birth_date = parse_date(
+                data.get("birthDate"), "%Y-%m-%dT%H:%M:%SZ"
+            )
             rikishi.debut = parse_date(data.get("debut"), "%Y%m")
             rikishi.intai = parse_date(data.get("intai"), "%Y-%m-%dT%H:%M:%SZ")
 
@@ -114,9 +123,10 @@ class Command(BaseCommand):
             heya_name = data.get("heya")
             if heya_name and heya_name != "-":
                 if heya_name not in heya_cache:
-                    heya_cache[heya_name], _ = await Heya.objects.aget_or_create(
-                        name=heya_name
-                    )
+                    (
+                        heya_cache[heya_name],
+                        _,
+                    ) = await Heya.objects.aget_or_create(name=heya_name)
                 rikishi.heya = heya_cache[heya_name]
 
             # Shusshin
@@ -132,7 +142,9 @@ class Command(BaseCommand):
                             (
                                 shusshin_cache[key],
                                 _,
-                            ) = await Shusshin.objects.aget_or_create(name=key[0])
+                            ) = await Shusshin.objects.aget_or_create(
+                                name=key[0]
+                            )
                         else:
                             (
                                 shusshin_cache[key],

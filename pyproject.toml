@@ -1,0 +1,21 @@
+[project]
+name = "sumoracle"
+version = "0.1.0"
+description = "A Sumo Prediction Engine"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 80
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "B"]
+ignore = []
+
+[tool.coverage.run]
+source = ["app", "config", "libs"]
+relative_files = true
+
+[tool.coverage.report]
+omit = ["*/migrations/*", "manage.py", "tests/*"]
+fail_under = 95

@@ -15,8 +15,12 @@ class Basho(models.Model):
     ]
 
     slug = models.CharField(max_length=6, primary_key=True, editable=False)
-    year = models.PositiveSmallIntegerField(choices=YEAR_CHOICES, editable=False)
-    month = models.PositiveSmallIntegerField(choices=MONTH_CHOICES, editable=False)
+    year = models.PositiveSmallIntegerField(
+        choices=YEAR_CHOICES, editable=False
+    )
+    month = models.PositiveSmallIntegerField(
+        choices=MONTH_CHOICES, editable=False
+    )
 
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
@@ -29,7 +33,9 @@ class Basho(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["year", "month"], name="unique_basho"),
+            models.UniqueConstraint(
+                fields=["year", "month"], name="unique_basho"
+            ),
         ]
         indexes = [
             models.Index(fields=["year", "month"]),

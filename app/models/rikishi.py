@@ -46,8 +46,12 @@ class Shusshin(models.Model):
 
 class Rikishi(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, editable=False)
-    sumodb_id = models.PositiveSmallIntegerField(unique=True, blank=True, null=True)
-    nsk_id = models.PositiveSmallIntegerField(unique=True, blank=True, null=True)
+    sumodb_id = models.PositiveSmallIntegerField(
+        unique=True, blank=True, null=True
+    )
+    nsk_id = models.PositiveSmallIntegerField(
+        unique=True, blank=True, null=True
+    )
     name = models.CharField(max_length=64)
     name_jp = models.CharField(max_length=64)
     rank = models.ForeignKey(
@@ -71,8 +75,12 @@ class Rikishi(models.Model):
         null=True,
         related_name="rikishi",
     )
-    height = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
-    weight = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
+    height = models.DecimalField(
+        max_digits=4, decimal_places=1, blank=True, null=True
+    )
+    weight = models.DecimalField(
+        max_digits=4, decimal_places=1, blank=True, null=True
+    )
     birth_date = models.DateField(blank=True, null=True)
     debut = models.DateField(blank=True, null=True)
     intai = models.DateField(blank=True, null=True)

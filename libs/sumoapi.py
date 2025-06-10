@@ -96,7 +96,9 @@ class SumoApiClient:
     async def get_measurements_history(self, rikishi_ids):
         tasks = []
         for rikishi_id in rikishi_ids:
-            tasks.append(self.client.get(f"/measurements?rikishiId={rikishi_id}"))
+            tasks.append(
+                self.client.get(f"/measurements?rikishiId={rikishi_id}")
+            )
         responses = await asyncio.gather(*tasks)
         return {
             rikishi_ids[i]: responses[i].json()
@@ -129,7 +131,9 @@ class SumoApiClient:
         return data if data.get("date") else None
 
     async def get_basho_banzuke(self, basho_id, division):
-        response = await self.client.get(f"/basho/{basho_id}/banzuke/{division}")
+        response = await self.client.get(
+            f"/basho/{basho_id}/banzuke/{division}"
+        )
         response.raise_for_status()
         return response.json()
 
