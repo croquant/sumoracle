@@ -18,8 +18,8 @@ class ModelUtilityTests(SimpleTestCase):
     def test_basho_methods(self):
         """``Basho.name`` and ``__str__`` should reflect the tournament."""
         basho = Basho(year=2025, month=1)
-        self.assertEqual(basho.name(), "Hastu")  # Month name
-        self.assertEqual(str(basho), "Hastu 2025")  # Includes year
+        self.assertEqual(basho.name(), "Hatsu")  # Month name
+        self.assertEqual(str(basho), "Hatsu 2025")  # Includes year
 
     def test_basho_slug_generation(self):
         """Saving a ``Basho`` should populate the ``slug`` field."""

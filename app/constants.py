@@ -76,7 +76,7 @@ class Direction(models.TextChoices):
 DIRECTION_NAMES_SHORT = {"East": "E", "West": "W"}
 
 BASHO_NAMES = {
-    1: "Hastu",
+    1: "Hatsu",
     3: "Haru",
     5: "Natsu",
     7: "Nagoya",
