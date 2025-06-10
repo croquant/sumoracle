@@ -15,12 +15,13 @@ from libs.sumoapi import SumoApiClient
 
 
 def pick_shikona(shikona_map, basho_slug):
-    """Return shikona for ``basho_slug`` or fallback to the latest available."""
+    """Return shikona for ``basho_slug`` or fallback to the prior record."""
     record = shikona_map.get(basho_slug)
     if record and (record.get("shikonaEn") or record.get("shikonaJp")):
         return record
 
-    for key in sorted(shikona_map.keys(), reverse=True):
+    keys = [k for k in shikona_map if k <= basho_slug]
+    for key in sorted(keys, reverse=True):
         rec = shikona_map[key]
         if rec.get("shikonaEn") or rec.get("shikonaJp"):
             return rec
