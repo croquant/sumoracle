@@ -1,6 +1,6 @@
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from django.test import SimpleTestCase
 
@@ -238,7 +238,11 @@ class RankingCommandTests(SimpleTestCase):
         cmd.style = SimpleNamespace(NOTICE=lambda m: m)
         with (
             patch("app.management.commands.ranking.asyncio.run") as run_mock,
-            patch.object(Command, "_handle_async", new=AsyncMock()) as a_mock,
+            patch.object(
+                Command,
+                "_handle_async",
+                new=MagicMock(return_value=None),
+            ) as a_mock,
         ):
             cmd.handle()
             self.assertTrue(run_mock.called)
