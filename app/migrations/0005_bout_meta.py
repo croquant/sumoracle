@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("app", "0003_bashohistory_meta"),
+        ("app", "0004_add_shikona_fields"),
     ]
 
     operations = [

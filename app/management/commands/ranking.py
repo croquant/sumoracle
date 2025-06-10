@@ -14,6 +14,21 @@ from app.models.rikishi import Rikishi
 from libs.sumoapi import SumoApiClient
 
 
+def pick_shikona(shikona_map, basho_slug):
+    """Return shikona for ``basho_slug`` or fallback to the prior record."""
+    record = shikona_map.get(basho_slug)
+    if record and (record.get("shikonaEn") or record.get("shikonaJp")):
+        return record
+
+    keys = [k for k in shikona_map if k <= basho_slug]
+    for key in sorted(keys, reverse=True):
+        rec = shikona_map[key]
+        if rec.get("shikonaEn") or rec.get("shikonaJp"):
+            return rec
+
+    return {}
+
+
 @sync_to_async
 def get_rikishis():
     return list(Rikishi.objects.only("id", "name"))
@@ -51,6 +66,7 @@ class Command(BaseCommand):
         existing_basho = await get_existing_basho()
         existing_rank = await get_existing_rank()
         existing_keys = await get_existing_keys()
+        shikona_cache = {}
 
         BATCH_SIZE = 50
         ranking_history_to_create = []
@@ -67,6 +83,21 @@ class Command(BaseCommand):
             ranking_histories = await api.get_ranking_history(
                 [r.id for r in batch]
             )
+
+            # Fetch shikona history for rikishi in this batch if not cached
+            shikona_tasks = {
+                r.id: api.get_shikonas(rikishiId=r.id)
+                for r in batch
+                if r.id not in shikona_cache
+            }
+            if shikona_tasks:
+                responses = await asyncio.gather(*shikona_tasks.values())
+                for rikishi_id, data in zip(
+                    shikona_tasks.keys(), responses, strict=True
+                ):
+                    shikona_cache[rikishi_id] = {
+                        rec.get("bashoId"): rec for rec in data
+                    }
 
             for rikishi in batch:
                 history = ranking_histories.get(rikishi.id, [])
@@ -97,8 +128,17 @@ class Command(BaseCommand):
                         rank_str, existing_rank
                     )
 
+                    shikona_data = pick_shikona(
+                        shikona_cache.get(rikishi.id, {}), basho_slug
+                    )
                     ranking_history_to_create.append(
-                        BashoHistory(rikishi=rikishi, basho=basho, rank=rank)
+                        BashoHistory(
+                            rikishi=rikishi,
+                            basho=basho,
+                            rank=rank,
+                            shikona_en=shikona_data.get("shikonaEn", ""),
+                            shikona_jp=shikona_data.get("shikonaJp", ""),
+                        )
                     )
 
             if len(ranking_history_to_create) >= 1000:
