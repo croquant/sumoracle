@@ -3,7 +3,7 @@ import asyncio
 from django.core.management.base import BaseCommand
 
 from app.models import Basho, Bout, Division, Rikishi
-from libs.sumoapi import SumoApiClient
+from libs.sumoapi import SumoApiClient, SumoApiError
 
 
 class Command(BaseCommand):
@@ -14,7 +14,10 @@ class Command(BaseCommand):
         parser.add_argument("--basho", dest="basho_id")
 
     def handle(self, rikishi_id=None, basho_id=None, **options):
-        asyncio.run(self._handle_async(rikishi_id, basho_id))
+        try:
+            asyncio.run(self._handle_async(rikishi_id, basho_id))
+        except SumoApiError as exc:
+            self.stderr.write(self.style.ERROR(str(exc)))
 
     async def _handle_async(self, rikishi_id, basho_id):
         api = SumoApiClient()

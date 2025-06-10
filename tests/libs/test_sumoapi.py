@@ -1,9 +1,10 @@
 import asyncio
 from unittest.mock import patch
 
+import httpx
 from django.test import SimpleTestCase
 
-from libs.sumoapi import SumoApiClient
+from libs.sumoapi import SumoApiClient, SumoApiError
 
 
 class DummyResponse:
@@ -119,3 +120,46 @@ class SumoApiClientTests(SimpleTestCase):
             )
             self.run_async(api.__aexit__(None, None, None))
             self.assertTrue(dummy_client.closed)
+
+    def test_retries_and_errors(self):
+        """Client should retry idempotent calls and raise on failures."""
+
+        class ErrorClient:
+            def __init__(self):
+                self.calls = 0
+
+            async def get(self, *args, **kwargs):
+                self.calls += 1
+                if self.calls == 1:
+                    raise httpx.HTTPError("boom")
+                if self.calls == 2:
+                    return DummyResponse({"records": [1]})
+                return DummyResponse({"records": []})
+
+            async def aclose(self):
+                pass
+
+        error_client = ErrorClient()
+        with patch("libs.sumoapi.httpx.AsyncClient", return_value=error_client):
+            api = SumoApiClient()
+            self.run_async(api.__aenter__())
+            self.assertEqual(self.run_async(api.get_all_rikishi()), [1])
+            self.assertEqual(error_client.calls, 3)
+            self.run_async(api.__aexit__(None, None, None))
+
+        class FailingClient:
+            async def get(self, *args, **kwargs):
+                raise httpx.HTTPError("fail")
+
+            async def aclose(self):
+                pass
+
+        with patch(
+            "libs.sumoapi.httpx.AsyncClient",
+            return_value=FailingClient(),
+        ):
+            api = SumoApiClient()
+            self.run_async(api.__aenter__())
+            with self.assertRaises(SumoApiError):
+                self.run_async(api.get_rikishi(1))
+            self.run_async(api.__aexit__(None, None, None))
