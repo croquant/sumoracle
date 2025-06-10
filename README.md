@@ -71,6 +71,7 @@ To run the test suite with coverage enabled and print a summary:
 coverage run manage.py test
 coverage report -m
 ```
+Coverage must be at least 95%, matching the `fail_under` setting in `pyproject.toml`.
 Open `htmlcov/index.html` in a browser to inspect the report.
 
 ## Contributing
