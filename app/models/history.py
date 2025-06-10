@@ -21,3 +21,16 @@ class BashoHistory(models.Model):
     )
     height = models.FloatField(blank=True, null=True)
     weight = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["basho__year", "basho__month", "rikishi_id"]
+        verbose_name_plural = "Basho history"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rikishi", "basho"],
+                name="unique_rikishi_basho",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["rikishi", "basho"]),
+        ]
