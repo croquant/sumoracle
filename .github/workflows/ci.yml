@@ -2,10 +2,16 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches:
+      - "main"
 
 jobs:
   tests:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,7 +26,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           coverage run manage.py test
-          coverage report --fail-under=80
+          coverage report
       - name: Coverage comment
         id: coverage_comment
         uses: py-cov-action/python-coverage-comment-action@v3

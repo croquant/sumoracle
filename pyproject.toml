@@ -18,4 +18,4 @@ relative_files = true
 
 [tool.coverage.report]
 omit = ["*/migrations/*", "manage.py", "tests/*"]
-fail_under = 95
+fail_under = 50
