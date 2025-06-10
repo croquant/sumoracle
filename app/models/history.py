@@ -23,6 +23,8 @@ class BashoHistory(models.Model):
     )
     height = models.FloatField(blank=True, null=True)
     weight = models.FloatField(blank=True, null=True)
+    shikona_en = models.CharField(max_length=64, blank=True, default="")
+    shikona_jp = models.CharField(max_length=64, blank=True, default="")
 
     class Meta:
         ordering = ["basho__year", "basho__month", "rikishi_id"]
