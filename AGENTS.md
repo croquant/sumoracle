@@ -7,6 +7,7 @@ Autonomously fix or extend the codebase without violating the axioms.
 - Django application. Async commands and HTTP client in `libs/sumoapi.py`.
 - Tests live in `tests/`.
 - Ruff and isort handle linting and formatting.
+- Requires Python 3.12 or later.
 
 ## CLI First
 

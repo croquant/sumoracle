@@ -7,6 +7,8 @@ basho and other sumo related objects.
 
 ## Project setup
 
+This project requires **Python 3.12** or later.
+
 1. Create and activate a virtual environment (optional but recommended):
    ```bash
    python -m venv .venv
