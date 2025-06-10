@@ -7,6 +7,7 @@ from app.constants import Direction, RankName
 from app.models.basho import Basho
 from app.models.bout import Bout
 from app.models.division import Division
+from app.models.history import BashoHistory
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
 
@@ -94,3 +95,18 @@ class ModelUtilityTests(SimpleTestCase):
             winner=east,
         )
         self.assertIn("202505", str(bout))
+
+    def test_bashohistory_shikona_fields(self):
+        division = Division(name="Makuuchi", name_short="M", level=1)
+        rank = Rank(division=division, title="Yokozuna", level=1)
+        basho = Basho(year=2025, month=1)
+        rikishi = Rikishi(name="Hakuho", name_jp="白鵬")
+        history = BashoHistory(
+            rikishi=rikishi,
+            basho=basho,
+            rank=rank,
+            shikona_en="Hakuho",
+            shikona_jp="白鵬",
+        )
+        self.assertEqual(history.shikona_en, "Hakuho")
+        self.assertEqual(history.shikona_jp, "白鵬")
