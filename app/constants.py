@@ -19,6 +19,9 @@ class DivisionEnum(Enum):
         self.level = level
 
 
+DIVISION_LEVELS = [(d.label, d.level) for d in DivisionEnum]
+
+
 class RankName(models.TextChoices):
     YOKOZUNA = "Yokozuna", "Yokozuna"
     OZEKI = "Ozeki", "Ozeki"
