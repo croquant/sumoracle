@@ -16,11 +16,15 @@ basho and other sumo related objects.
    ```bash
    pip install -r requirements.txt
    ```
-3. Apply the initial database migrations:
+3. Create a `.env` file from the example and adjust the values:
+   ```bash
+   cp .env.example .env
+   ```
+4. Apply the initial database migrations:
    ```bash
    python manage.py migrate
    ```
-4. (Optional) populate the database with data from the Sumo API:
+5. (Optional) populate the database with data from the Sumo API:
    ```bash
    python manage.py populate
    python manage.py ranking
