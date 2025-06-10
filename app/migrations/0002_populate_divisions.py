@@ -1,12 +1,16 @@
 from django.db import migrations
 
-from app.constants import DIVISIONS
+from app.constants import DivisionEnum
 
 
 def populate_divisions(apps, schema_editor):
     Division = apps.get_model("app", "Division")
-    for name, name_short, level in DIVISIONS:
-        Division.objects.create(name=name, name_short=name_short, level=level)
+    for division in DivisionEnum:
+        Division.objects.create(
+            name=division.label,
+            name_short=division.short,
+            level=division.level,
+        )
 
 
 class Migration(migrations.Migration):

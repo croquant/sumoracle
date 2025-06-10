@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
+from app.constants import Direction, RankName
 from app.models.basho import Basho
 from app.models.division import Division
 from app.models.rank import Rank
@@ -26,10 +27,10 @@ class ModelUtilityTests(SimpleTestCase):
         division = Division(name="Makuuchi", name_short="M", level=1)
         rank = Rank(
             division=division,
-            title="Yokozuna",
+            title=RankName.YOKOZUNA,
             level=1,
             order=1,
-            direction="East",
+            direction=Direction.EAST,
         )
         self.assertEqual(str(rank), rank.name())
         self.assertEqual(rank.name(), "Yokozuna 1E")
@@ -38,7 +39,7 @@ class ModelUtilityTests(SimpleTestCase):
 
         rank_no_order = Rank(
             division=division,
-            title="Ozeki",
+            title=RankName.OZEKI,
             level=2,
         )
         self.assertEqual(rank_no_order.name(), "Ozeki")
