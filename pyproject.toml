@@ -21,4 +21,7 @@ omit = ["*/migrations/*", "manage.py", "tests/*"]
 fail_under = 50
 
 [tool.isort]
-profile = "black"
+profile = "django"
+multi_line_output = 3
+line_length = 80
+known_first_party = ["app", "config", "libs", "tests"]
