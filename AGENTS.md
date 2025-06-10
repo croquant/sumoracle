@@ -47,6 +47,7 @@ of sync.
    ```
 3. **Run pre-commit hooks** (if installed)
    ```bash
+   pre-commit install
    pre-commit run --all-files
    ```
 4. **Commit** focused changes with a descriptive message.
