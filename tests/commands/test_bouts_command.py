@@ -146,3 +146,11 @@ class BoutsCommandTests(SimpleTestCase):
             cmd.handle()
         self.assertTrue(run_mock.called)
         self.assertIn("fail", output[-1])
+
+    def test_parser_arguments(self):
+        """Argument parser should accept rikishi and basho options."""
+        cmd = Command()
+        parser = cmd.create_parser("manage.py", "bouts")
+        args = parser.parse_args(["10", "--basho", "202501"])
+        self.assertEqual(args.rikishi_id, 10)
+        self.assertEqual(args.basho_id, "202501")

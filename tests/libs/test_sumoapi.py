@@ -163,3 +163,23 @@ class SumoApiClientTests(SimpleTestCase):
             with self.assertRaises(SumoApiError):
                 self.run_async(api.get_rikishi(1))
             self.run_async(api.__aexit__(None, None, None))
+
+    def test_retries_fail_at_limit(self):
+        """_get_with_retries should re-raise when attempts are exhausted."""
+
+        class AlwaysFailClient:
+            async def get(self, *args, **kwargs):
+                raise httpx.HTTPError("boom")
+
+            async def aclose(self):
+                pass
+
+        with patch(
+            "libs.sumoapi.httpx.AsyncClient",
+            return_value=AlwaysFailClient(),
+        ):
+            api = SumoApiClient()
+            self.run_async(api.__aenter__())
+            with self.assertRaises(SumoApiError):
+                self.run_async(api.get_all_rikishi())
+            self.run_async(api.__aexit__(None, None, None))
