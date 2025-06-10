@@ -35,10 +35,14 @@ async def dummy_gather(*coros):
 
 
 class SumoApiClientTests(SimpleTestCase):
+    """Exercise the :class:`SumoApiClient` helper methods."""
+
     def run_async(self, coro):
+        """Helper to run async functions in tests."""
         return asyncio.get_event_loop().run_until_complete(coro)
 
     def test_client_methods(self):
+        """All helper methods should parse API responses correctly."""
         responses = [
             DummyResponse({"records": [1]}),
             DummyResponse({"records": []}),
@@ -67,6 +71,7 @@ class SumoApiClientTests(SimpleTestCase):
         ):
             api = SumoApiClient()
             self.run_async(api.__aenter__())
+            # Pagination yields two responses
             self.assertEqual(self.run_async(api.get_all_rikishi()), [1])
             self.assertEqual(self.run_async(api.get_rikishis()), {"r": 1})
             self.assertEqual(self.run_async(api.get_rikishi(1)), {"id": 1})

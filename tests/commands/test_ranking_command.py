@@ -18,10 +18,14 @@ from app.models.rikishi import Rikishi
 
 
 class RankingCommandTests(SimpleTestCase):
+    """Tests for the ``ranking`` management command helpers."""
+
     def run_async(self, coro):
+        """Synchronously run an async coroutine for convenience."""
         return asyncio.get_event_loop().run_until_complete(coro)
 
     def test_helper_functions(self):
+        """Utility getters should return data in expected formats."""
         with (
             patch("app.management.commands.ranking.Rikishi.objects") as ro,
             patch("app.management.commands.ranking.Basho.objects") as bo,
@@ -33,7 +37,7 @@ class RankingCommandTests(SimpleTestCase):
             rao.all.return_value = [SimpleNamespace(slug="y")]
             ho.values_list.return_value = [(1, "x")]
 
-            self.assertEqual(self.run_async(get_rikishis()), [1])
+            self.assertEqual(self.run_async(get_rikishis()), [1])  # Queryset
             self.assertEqual(
                 self.run_async(get_existing_basho()),
                 {"x": bo.all.return_value[0]},
@@ -45,6 +49,7 @@ class RankingCommandTests(SimpleTestCase):
             self.assertEqual(self.run_async(get_existing_keys()), {(1, "x")})
 
     def test_pick_shikona(self):
+        """Select the nearest available shikona data."""
         data = {
             "202401": {"shikonaEn": "Old", "shikonaJp": "旧"},
             "202403": {"shikonaEn": "New", "shikonaJp": "新"},
@@ -54,6 +59,7 @@ class RankingCommandTests(SimpleTestCase):
         self.assertEqual(pick_shikona(data, "202312"), {})
 
     def test_shikona_fields_populated(self):
+        """Command should populate shikona fields when available."""
         rikishi = Rikishi(id=1, name="R", name_jp="R")
         basho = Basho(year=2025, month=1)
         basho.slug = "202501"
@@ -109,10 +115,11 @@ class RankingCommandTests(SimpleTestCase):
             self.run_async(cmd._handle_async())
 
             created = mock_bulk.call_args[0][0][0]
-            self.assertEqual(created.shikona_en, "Test")
-            self.assertEqual(created.shikona_jp, "テスト")
+            self.assertEqual(created.shikona_en, "Test")  # Stored English
+            self.assertEqual(created.shikona_jp, "テスト")  # Stored Japanese
 
     def test_shikona_fallback_previous(self):
+        """When missing, use shikona from prior basho."""
         rikishi = Rikishi(id=1, name="R", name_jp="R")
         basho = Basho(year=2025, month=4)
         basho.slug = "202504"
@@ -168,6 +175,7 @@ class RankingCommandTests(SimpleTestCase):
             self.assertEqual(created.shikona_jp, "後")
 
     def test_no_future_shikona_used(self):
+        """The command should not use future shikona entries."""
         rikishi = Rikishi(id=1, name="R", name_jp="R")
         basho = Basho(year=2025, month=1)
         basho.slug = "202501"
@@ -223,6 +231,7 @@ class RankingCommandTests(SimpleTestCase):
             self.assertEqual(created.shikona_jp, "")
 
     def test_log_and_handle(self):
+        """Ensure synchronous wrapper and logger behave."""
         cmd = Command()
         output = []
         cmd.stdout = SimpleNamespace(write=lambda msg: output.append(msg))
@@ -235,9 +244,10 @@ class RankingCommandTests(SimpleTestCase):
             self.assertTrue(run_mock.called)
             self.assertTrue(a_mock.called)
         cmd.log("hello")
-        self.assertEqual(output[-1], "hello")
+        self.assertEqual(output[-1], "hello")  # Message printed
 
     def test_get_or_create_rank_variations(self):
+        """Rank caching should prevent duplicate queries."""
         cmd = Command()
         cache = {}
         rank_obj = SimpleNamespace()
@@ -252,6 +262,7 @@ class RankingCommandTests(SimpleTestCase):
         self.assertEqual(create_mock.call_count, 3)
 
     def test_create_basho_from_api(self):
+        """Creating a ``Basho`` from API data should hit the ORM once."""
         cmd = Command()
         basho_data = {
             "date": "202501",
@@ -266,6 +277,7 @@ class RankingCommandTests(SimpleTestCase):
         create_mock.assert_awaited_once()
 
     def test_handle_skip_old_and_new_basho_paths(self):
+        """Command should fetch missing basho and bulk save history."""
         rikishi = Rikishi(id=1, name="R", name_jp="R")
         existing = Basho(year=2025, month=4)
         existing.slug = "202504"
