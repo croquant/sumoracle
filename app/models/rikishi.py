@@ -6,6 +6,8 @@ from .rank import Rank
 
 
 class Heya(models.Model):
+    """Stable to which a ``Rikishi`` belongs."""
+
     slug = models.SlugField(primary_key=True, editable=False)
     name = models.CharField(max_length=32, editable=False)
 
@@ -22,6 +24,8 @@ class Heya(models.Model):
 
 
 class Shusshin(models.Model):
+    """Place of origin for a ``Rikishi``."""
+
     slug = models.SlugField(primary_key=True, editable=False)
     name = models.CharField(max_length=32, editable=False)
     international = models.BooleanField(default=False, editable=False)
@@ -45,6 +49,8 @@ class Shusshin(models.Model):
 
 
 class Rikishi(models.Model):
+    """Sumo wrestler with optional ``Rank``, ``Heya`` and ``Shusshin`` links."""
+
     id = models.PositiveSmallIntegerField(primary_key=True, editable=False)
     sumodb_id = models.PositiveSmallIntegerField(
         unique=True, blank=True, null=True

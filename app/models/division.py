@@ -4,6 +4,8 @@ from django.utils.text import slugify
 
 
 class Division(models.Model):
+    """Sumo division ordered by ``level`` with short and full names."""
+
     name = models.CharField(
         verbose_name="name", primary_key=True, max_length=12, unique=True
     )

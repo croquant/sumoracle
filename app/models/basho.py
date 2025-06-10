@@ -4,6 +4,8 @@ from app.constants import BASHO_NAMES
 
 
 class Basho(models.Model):
+    """Tournament defined by year and month with optional start/end dates."""
+
     YEAR_CHOICES = [(y, str(y)) for y in range(1958, 2100)]
     MONTH_CHOICES = [
         (1, "January"),
