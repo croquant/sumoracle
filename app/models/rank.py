@@ -35,23 +35,22 @@ class Rank(models.Model):
         blank=True,
         editable=False,
     )
-    value = models.GeneratedField(
-        expression=(
-            models.F("division__level") * models.Value(10000)
-            + models.F("level") * models.Value(100)
-            + models.functions.Coalesce(models.F("order"), models.Value(0))
-            * models.Value(2)
-            + models.Case(
-                models.When(direction="East", then=models.Value(0)),
-                models.When(direction="West", then=models.Value(1)),
-                default=models.Value(0),
-                output_field=models.IntegerField(),
-            )
-        ),
-        output_field=models.IntegerField(),
-        db_persist=True,  # stored (not virtual)
-        editable=False,
-    )
+
+    @property
+    def value(self):
+        dir_val = (
+            0
+            if self.direction == "East"
+            else 1
+            if self.direction == "West"
+            else 0
+        )
+        return (
+            self.division.level * 10000
+            + self.level * 100
+            + (self.order or 0) * 2
+            + dir_val
+        )
 
     class Meta:
         unique_together = ("title", "order", "direction", "division")
