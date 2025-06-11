@@ -183,3 +183,15 @@ class SumoApiClientTests(SimpleTestCase):
             with self.assertRaises(SumoApiError):
                 self.run_async(api.get_all_rikishi())
             self.run_async(api.__aexit__(None, None, None))
+
+    def test_env_base_url_override(self):
+        """Environment variable should override the default base URL."""
+
+        with (
+            patch.dict("os.environ", {"SUMO_API_URL": "https://example.test"}),
+            patch("libs.sumoapi.httpx.AsyncClient") as mock_client,
+        ):
+            SumoApiClient()
+            mock_client.assert_called_with(
+                base_url="https://example.test", timeout=30.0
+            )
