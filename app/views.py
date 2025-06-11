@@ -1,6 +1,10 @@
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, TemplateView
 
 from .models import Division
+
+
+class IndexView(TemplateView):
+    template_name = "index.html"
 
 
 class DivisionListView(ListView):
