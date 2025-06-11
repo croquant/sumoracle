@@ -1,4 +1,4 @@
-# app/management/commands/populate_ranking_history.py
+# app/management/commands/history.py
 
 import asyncio
 from datetime import datetime
@@ -65,7 +65,7 @@ def get_existing_keys():
 
 
 class Command(AsyncBaseCommand):
-    help = "Populate Ranking history (async)"
+    help = "Populate rikishi history (async)"
 
     def log(self, message):
         self.stdout.write(self.style.NOTICE(message))

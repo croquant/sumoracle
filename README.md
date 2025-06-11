@@ -31,7 +31,7 @@ This project requires **Python 3.12** or later.
 5. (Optional) populate the database using these commands:
    ```bash
    python manage.py populate  # fetches rikishi data and fills the DB
-   python manage.py ranking   # imports ranking, shikona & measurements history
+  python manage.py history   # imports ranking, shikona & measurements history
    ```
 
 ## Running the development server

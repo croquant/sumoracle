@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from django.test import SimpleTestCase
 
-from app.management.commands.ranking import (
+from app.management.commands.history import (
     Command,
     get_existing_basho,
     get_existing_keys,
@@ -18,9 +18,11 @@ from app.models.rank import Rank
 from app.models.rikishi import Rikishi
 from libs.sumoapi import SumoApiError
 
+CMD_PREFIX = "app.management.commands.history"
 
-class RankingCommandTests(SimpleTestCase):
-    """Tests for the ``ranking`` management command helpers."""
+
+class HistoryCommandTests(SimpleTestCase):
+    """Tests for the ``history`` management command helpers."""
 
     def run_async(self, coro):
         """Synchronously run an async coroutine for convenience."""
@@ -29,10 +31,10 @@ class RankingCommandTests(SimpleTestCase):
     def test_helper_functions(self):
         """Utility getters should return data in expected formats."""
         with (
-            patch("app.management.commands.ranking.Rikishi.objects") as ro,
-            patch("app.management.commands.ranking.Basho.objects") as bo,
-            patch("app.management.commands.ranking.Rank.objects") as rao,
-            patch("app.management.commands.ranking.BashoHistory.objects") as ho,
+            patch(f"{CMD_PREFIX}.Rikishi.objects") as ro,
+            patch(f"{CMD_PREFIX}.Basho.objects") as bo,
+            patch(f"{CMD_PREFIX}.Rank.objects") as rao,
+            patch(f"{CMD_PREFIX}.BashoHistory.objects") as ho,
         ):
             ro.only.return_value = [1]
             bo.all.return_value = [SimpleNamespace(slug="x")]
@@ -80,31 +82,31 @@ class RankingCommandTests(SimpleTestCase):
         async_mock = AsyncMock
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={basho.slug: basho}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
             ),
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as mock_bulk,
             patch(
-                "app.management.commands.ranking.SumoApiClient",
+                "app.management.commands.history.SumoApiClient",
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
@@ -140,31 +142,31 @@ class RankingCommandTests(SimpleTestCase):
         async_mock = AsyncMock
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={basho.slug: basho}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
             ),
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as mock_bulk,
             patch(
-                "app.management.commands.ranking.SumoApiClient",
+                "app.management.commands.history.SumoApiClient",
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
@@ -196,31 +198,31 @@ class RankingCommandTests(SimpleTestCase):
         async_mock = AsyncMock
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={basho.slug: basho}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
             ),
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as mock_bulk,
             patch(
-                "app.management.commands.ranking.SumoApiClient",
+                "app.management.commands.history.SumoApiClient",
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
@@ -252,31 +254,31 @@ class RankingCommandTests(SimpleTestCase):
         async_mock = AsyncMock
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={basho.slug: basho}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
             ),
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as mock_bulk,
             patch(
-                "app.management.commands.ranking.SumoApiClient",
+                "app.management.commands.history.SumoApiClient",
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
@@ -309,31 +311,31 @@ class RankingCommandTests(SimpleTestCase):
         async_mock = AsyncMock
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={basho.slug: basho}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
             ),
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as mock_bulk,
             patch(
-                "app.management.commands.ranking.SumoApiClient",
+                "app.management.commands.history.SumoApiClient",
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
@@ -366,31 +368,31 @@ class RankingCommandTests(SimpleTestCase):
         async_mock = AsyncMock
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={basho.slug: basho}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
             ),
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as mock_bulk,
             patch(
-                "app.management.commands.ranking.SumoApiClient",
+                "app.management.commands.history.SumoApiClient",
             ) as mock_client_cls,
         ):
             mock_api = AsyncMock()
@@ -464,7 +466,7 @@ class RankingCommandTests(SimpleTestCase):
         cache = {}
         rank_obj = SimpleNamespace()
         with patch(
-            "app.management.commands.ranking.Rank.objects.aget_or_create",
+            "app.management.commands.history.Rank.objects.aget_or_create",
             new=AsyncMock(return_value=(rank_obj, True)),
         ) as create_mock:
             self.run_async(cmd.get_or_create_rank("Yokozuna 1 East", cache))
@@ -482,7 +484,7 @@ class RankingCommandTests(SimpleTestCase):
             "endDate": "2025-01-24T00:00:00Z",
         }
         with patch(
-            "app.management.commands.ranking.Basho.objects.acreate",
+            "app.management.commands.history.Basho.objects.acreate",
             new=AsyncMock(),
         ) as create_mock:
             self.run_async(cmd.create_basho_from_api(basho_data))
@@ -503,30 +505,30 @@ class RankingCommandTests(SimpleTestCase):
         )
         with (
             patch(
-                "app.management.commands.ranking.get_rikishis",
+                "app.management.commands.history.get_rikishis",
                 new=async_mock(return_value=[rikishi]),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_basho",
+                "app.management.commands.history.get_existing_basho",
                 new=async_mock(return_value={"202504": existing}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_rank",
+                "app.management.commands.history.get_existing_rank",
                 new=async_mock(return_value={}),
             ),
             patch(
-                "app.management.commands.ranking.get_existing_keys",
+                "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value={(1, "202503")}),
             ),
             patch(
-                "app.management.commands.ranking.SumoApiClient"
+                "app.management.commands.history.SumoApiClient"
             ) as client_cls,
             patch(
-                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                "app.management.commands.history.BashoHistory.objects.abulk_create",
                 new=async_mock(),
             ) as bulk_mock,
             patch(
-                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(Rank(title="Y"), True)),
             ),
         ):
