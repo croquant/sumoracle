@@ -22,6 +22,7 @@ This project requires **Python 3.12** or later.
    ```bash
    cp .env.example .env
    ```
+   Do not commit the `.env` file to version control.
    Set the `SUMO_API_URL` environment variable if you need to point to a
    custom Sumo API instance.
 4. Apply the initial database migrations:
