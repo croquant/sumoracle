@@ -18,22 +18,19 @@ This project requires **Python 3.12** or later.
    ```bash
    pip install -r requirements.txt
    ```
-3. Create a `.env` file from the example and adjust the values:
+3. Copy `.env.example` to `.env` and adjust the values:
    ```bash
-  cp .env.example .env
-  ```
-  Do not commit the `.env` file to version control.
-  Set the `SUMO_API_URL` environment variable if you need to point to a
-  custom Sumo API instance. Use `LOG_LEVEL` to change the Django logging
-  verbosity (default: `INFO`).
+   cp .env.example .env
+   ```
+   Do not commit the `.env` file to version control.
 4. Apply the initial database migrations:
    ```bash
    python manage.py migrate
    ```
 5. (Optional) populate the database using these commands:
    ```bash
-   python manage.py populate  # fetches rikishi data and fills the DB
-  python manage.py history   # imports ranking, shikona & measurements history
+   python manage.py populate  # fetch rikishi data
+   python manage.py history   # import ranking, shikona and measurements history
    ```
 
 ## Running the development server
@@ -43,6 +40,29 @@ Start Django's built‑in server:
 python manage.py runserver
 ```
 This uses the settings from `config/settings.py` and an SQLite database.
+
+## Docker quickstart
+
+The project includes a `Dockerfile` and `docker-compose.yml` for running
+the application in containers.
+
+Build the image:
+```bash
+docker build -t sumoracle .
+```
+
+Start the stack (web + Postgres):
+```bash
+docker compose up
+```
+
+Run management commands inside the container:
+```bash
+docker compose run web python manage.py migrate
+```
+
+Environment variables are read from `.env`. See `.env.example` for the
+available keys.
 
 ## Linting and formatting
 
@@ -75,7 +95,7 @@ To run the test suite with coverage enabled and print a summary:
 coverage run manage.py test
 coverage report -m
 ```
-Coverage must be at least 95%, matching the `fail_under` setting in `pyproject.toml`.
+Coverage must be at least 95%.
 Open `htmlcov/index.html` in a browser to inspect the report.
 
 ## Contributing
