@@ -1,0 +1,6 @@
+.git
+__pycache__/
+*.pyc
+.venv/
+coverage.xml
+htmlcov/
