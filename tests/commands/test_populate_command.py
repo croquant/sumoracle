@@ -278,12 +278,12 @@ class PopulateCommandTests(SimpleTestCase):
 
         with (
             patch(
-                "app.management.commands.populate.asyncio.run",
+                "app.management.commands.base.asyncio.run",
                 side_effect=runner,
             ) as run_mock,
             patch.object(
                 Command,
-                "_handle_async",
+                "run",
                 new=AsyncMock(side_effect=SumoApiError("bad")),
             ),
         ):

@@ -4,14 +4,14 @@ import asyncio
 from datetime import datetime
 
 from asgiref.sync import sync_to_async
-from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 
+from app.management.commands import AsyncBaseCommand
 from app.models.basho import Basho
 from app.models.history import BashoHistory
 from app.models.rank import Rank
 from app.models.rikishi import Rikishi
-from libs.sumoapi import SumoApiClient, SumoApiError
+from libs.sumoapi import SumoApiClient
 
 
 def pick_shikona(shikona_map, basho_slug):
@@ -49,19 +49,13 @@ def get_existing_keys():
     return set(BashoHistory.objects.values_list("rikishi_id", "basho__slug"))
 
 
-class Command(BaseCommand):
+class Command(AsyncBaseCommand):
     help = "Populate Ranking history (async)"
 
     def log(self, message):
         self.stdout.write(self.style.NOTICE(message))
 
-    def handle(self, *args, **kwargs):
-        try:
-            asyncio.run(self._handle_async())
-        except SumoApiError as exc:
-            self.stderr.write(self.style.ERROR(str(exc)))
-
-    async def _handle_async(self):
+    async def run(self, *args, **kwargs):
         async with SumoApiClient() as api:
             self.log("Prefetching database objects...")
             rikishis = await get_rikishis()

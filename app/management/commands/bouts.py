@@ -1,25 +1,16 @@
-import asyncio
-
-from django.core.management.base import BaseCommand
-
+from app.management.commands import AsyncBaseCommand
 from app.models import Basho, Bout, Division, Rikishi
-from libs.sumoapi import SumoApiClient, SumoApiError
+from libs.sumoapi import SumoApiClient
 
 
-class Command(BaseCommand):
+class Command(AsyncBaseCommand):
     help = "Import bouts for a rikishi"
 
     def add_arguments(self, parser):
         parser.add_argument("rikishi_id", nargs="?", type=int)
         parser.add_argument("--basho", dest="basho_id")
 
-    def handle(self, rikishi_id=None, basho_id=None, **options):
-        try:
-            asyncio.run(self._handle_async(rikishi_id, basho_id))
-        except SumoApiError as exc:
-            self.stderr.write(self.style.ERROR(str(exc)))
-
-    async def _handle_async(self, rikishi_id, basho_id):
+    async def run(self, rikishi_id=None, basho_id=None, **options):
         async with SumoApiClient() as api:
             rikishi_ids = (
                 [rikishi_id]

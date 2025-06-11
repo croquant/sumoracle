@@ -1,15 +1,14 @@
-import asyncio
 from datetime import datetime
 
 import pycountry
 from asgiref.sync import sync_to_async
-from django.core.management.base import BaseCommand
 
 from app.constants import DIVISION_LEVELS
+from app.management.commands import AsyncBaseCommand
 from app.models.division import Division
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
-from libs.sumoapi import SumoApiClient, SumoApiError
+from libs.sumoapi import SumoApiClient
 
 
 def clean_shusshin_name(name):
@@ -31,7 +30,7 @@ def parse_date(date_str, fmt):
         return None
 
 
-class Command(BaseCommand):
+class Command(AsyncBaseCommand):
     help = "Populate DB with Rikishi (async version)"
 
     def log(self, msg):
@@ -40,13 +39,7 @@ class Command(BaseCommand):
     def warn(self, msg):
         self.stdout.write(self.style.WARNING(msg))
 
-    def handle(self, *args, **kwargs):
-        try:
-            asyncio.run(self._handle_async())
-        except SumoApiError as exc:
-            self.stderr.write(self.style.ERROR(str(exc)))
-
-    async def _handle_async(self):
+    async def run(self, *args, **kwargs):
         async with SumoApiClient() as api:
             await self._populate_divisions()
             self.log("Fetching rikishi from API...")
