@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import httpx
 
@@ -10,6 +11,7 @@ class SumoApiError(Exception):
 
 
 BASE_URL = "https://sumo-api.com/api"
+ENV_BASE_URL = "SUMO_API_URL"
 
 
 class SumoApiClient:
@@ -25,7 +27,8 @@ class SumoApiClient:
             and ``timeout`` are preconfigured but can be overridden.
         """
 
-        default_kwargs = {"base_url": BASE_URL, "timeout": 30.0}
+        base_url = os.getenv(ENV_BASE_URL, BASE_URL)
+        default_kwargs = {"base_url": base_url, "timeout": 30.0}
         default_kwargs.update(client_kwargs)
         self.client = httpx.AsyncClient(**default_kwargs)
 
