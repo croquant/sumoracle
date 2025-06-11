@@ -20,11 +20,12 @@ This project requires **Python 3.12** or later.
    ```
 3. Create a `.env` file from the example and adjust the values:
    ```bash
-   cp .env.example .env
-   ```
-   Do not commit the `.env` file to version control.
-   Set the `SUMO_API_URL` environment variable if you need to point to a
-   custom Sumo API instance.
+  cp .env.example .env
+  ```
+  Do not commit the `.env` file to version control.
+  Set the `SUMO_API_URL` environment variable if you need to point to a
+  custom Sumo API instance. Use `LOG_LEVEL` to change the Django logging
+  verbosity (default: `INFO`).
 4. Apply the initial database migrations:
    ```bash
    python manage.py migrate

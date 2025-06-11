@@ -29,6 +29,9 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
+# Default log level for the ``LOGGING`` config.
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+
 ALLOWED_HOSTS = (
     os.environ.get("ALLOWED_HOSTS", "").split()
     if os.environ.get("ALLOWED_HOSTS")
@@ -139,3 +142,35 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Basic logging configuration directing output to stdout/stderr.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "[{levelname}] {name}: {message}",
+            "style": "{",
+        }
+    },
+    "handlers": {
+        "stdout": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+            "formatter": "default",
+        },
+        "stderr": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "formatter": "default",
+        },
+    },
+    "root": {"handlers": ["stdout"], "level": LOG_LEVEL},
+    "loggers": {
+        "django.request": {
+            "handlers": ["stderr"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        }
+    },
+}
