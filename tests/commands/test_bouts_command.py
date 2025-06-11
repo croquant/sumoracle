@@ -72,7 +72,7 @@ class BoutsCommandTests(SimpleTestCase):
             cmd = Command()
             cmd.stdout = SimpleNamespace(write=lambda msg: None)
             cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
-            self.run_async(cmd._handle_async(1, None))
+            self.run_async(cmd.run(1, None))
             create_mock.assert_awaited_once()
             kwargs = create_mock.call_args.kwargs
             self.assertEqual(kwargs["defaults"]["kimarite"], "yorikiri")
@@ -97,7 +97,7 @@ class BoutsCommandTests(SimpleTestCase):
             cmd = Command()
             cmd.stdout = SimpleNamespace(write=lambda msg: None)
             cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
-            self.run_async(cmd._handle_async(1, "202501"))
+            self.run_async(cmd.run(1, "202501"))
             api.get_rikishi_matches.assert_awaited_with(1, bashoId="202501")
 
     def test_no_records_no_save(self):
@@ -118,7 +118,7 @@ class BoutsCommandTests(SimpleTestCase):
             cmd = Command()
             cmd.stdout = SimpleNamespace(write=lambda msg: output.append(msg))
             cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
-            self.run_async(cmd._handle_async(1, None))
+            self.run_async(cmd.run(1, None))
             create_mock.assert_not_awaited()
             self.assertIn("Imported 0 bouts", output[-1])
 
@@ -134,12 +134,12 @@ class BoutsCommandTests(SimpleTestCase):
 
         with (
             patch(
-                "app.management.commands.bouts.asyncio.run",
+                "app.management.commands.base.asyncio.run",
                 side_effect=runner,
             ) as run_mock,
             patch.object(
                 Command,
-                "_handle_async",
+                "run",
                 new=AsyncMock(side_effect=SumoApiError("fail")),
             ),
         ):

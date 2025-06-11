@@ -113,7 +113,7 @@ class RankingCommandTests(SimpleTestCase):
 
             cmd = Command()
             cmd.log = lambda *a, **k: None
-            self.run_async(cmd._handle_async())
+            self.run_async(cmd.run())
 
             created = mock_bulk.call_args[0][0][0]
             self.assertEqual(created.shikona_en, "Test")  # Stored English
@@ -169,7 +169,7 @@ class RankingCommandTests(SimpleTestCase):
 
             cmd = Command()
             cmd.log = lambda *a, **k: None
-            self.run_async(cmd._handle_async())
+            self.run_async(cmd.run())
 
             created = mock_bulk.call_args[0][0][0]
             self.assertEqual(created.shikona_en, "Later")
@@ -225,7 +225,7 @@ class RankingCommandTests(SimpleTestCase):
 
             cmd = Command()
             cmd.log = lambda *a, **k: None
-            self.run_async(cmd._handle_async())
+            self.run_async(cmd.run())
 
             created = mock_bulk.call_args[0][0][0]
             self.assertEqual(created.shikona_en, "")
@@ -238,10 +238,10 @@ class RankingCommandTests(SimpleTestCase):
         cmd.stdout = SimpleNamespace(write=lambda msg: output.append(msg))
         cmd.style = SimpleNamespace(NOTICE=lambda m: m)
         with (
-            patch("app.management.commands.ranking.asyncio.run") as run_mock,
+            patch("app.management.commands.base.asyncio.run") as run_mock,
             patch.object(
                 Command,
-                "_handle_async",
+                "run",
                 new=MagicMock(return_value=None),
             ) as a_mock,
         ):
@@ -263,12 +263,12 @@ class RankingCommandTests(SimpleTestCase):
 
         with (
             patch(
-                "app.management.commands.ranking.asyncio.run",
+                "app.management.commands.base.asyncio.run",
                 side_effect=runner,
             ) as run_mock,
             patch.object(
                 Command,
-                "_handle_async",
+                "run",
                 new=AsyncMock(side_effect=SumoApiError("oops")),
             ),
         ):
@@ -367,7 +367,7 @@ class RankingCommandTests(SimpleTestCase):
                 return_value=Basho(year=2025, month=2)
             )
             cmd.bulk_save = AsyncMock(wraps=cmd.bulk_save)
-            self.run_async(cmd._handle_async())
+            self.run_async(cmd.run())
             cmd.create_basho_from_api.assert_awaited()
             self.assertTrue(bulk_mock.await_count)
             cmd.bulk_save.assert_awaited()
