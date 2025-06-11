@@ -15,5 +15,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 EXPOSE 8000
 
+HEALTHCHECK CMD curl -f http://localhost:8000/ || exit 1
+
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["gunicorn", "config.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
