@@ -14,6 +14,21 @@ from app.models.rikishi import Rikishi
 from libs.sumoapi import SumoApiClient
 
 
+def pick_measurements(measure_map, basho_slug):
+    """Return measurements for ``basho_slug`` or fallback to a prior record."""
+    record = measure_map.get(basho_slug)
+    if record and (record.get("height") or record.get("weight")):
+        return record
+
+    keys = [k for k in measure_map if k <= basho_slug]
+    for key in sorted(keys, reverse=True):
+        rec = measure_map[key]
+        if rec.get("height") or rec.get("weight"):
+            return rec
+
+    return {}
+
+
 def pick_shikona(shikona_map, basho_slug):
     """Return shikona for ``basho_slug`` or fallback to the prior record."""
     record = shikona_map.get(basho_slug)
@@ -63,6 +78,7 @@ class Command(AsyncBaseCommand):
             existing_rank = await get_existing_rank()
             existing_keys = await get_existing_keys()
             shikona_cache = {}
+            measurement_cache = {}
 
             BATCH_SIZE = 50
             ranking_history_to_create = []
@@ -80,20 +96,32 @@ class Command(AsyncBaseCommand):
                     [r.id for r in batch]
                 )
 
-            # Fetch shikona history for rikishi in this batch if not cached
-            shikona_tasks = {
-                r.id: api.get_shikonas(rikishiId=r.id)
-                for r in batch
-                if r.id not in shikona_cache
-            }
-            if shikona_tasks:
-                responses = await asyncio.gather(*shikona_tasks.values())
-                for rikishi_id, data in zip(
-                    shikona_tasks.keys(), responses, strict=True
-                ):
-                    shikona_cache[rikishi_id] = {
-                        rec.get("bashoId"): rec for rec in data
-                    }
+                # Fetch measurement and shikona history if not cached
+                shikona_tasks = {
+                    r.id: api.get_shikonas(rikishiId=r.id)
+                    for r in batch
+                    if r.id not in shikona_cache
+                }
+                measurement_tasks = {
+                    r.id: api.get_measurements(rikishiId=r.id)
+                    for r in batch
+                    if r.id not in measurement_cache
+                }
+                if shikona_tasks or measurement_tasks:
+                    responses = await asyncio.gather(
+                        *shikona_tasks.values(), *measurement_tasks.values()
+                    )
+                    resp_iter = iter(responses)
+                    for rikishi_id in shikona_tasks:
+                        data = next(resp_iter)
+                        shikona_cache[rikishi_id] = {
+                            rec.get("bashoId"): rec for rec in data
+                        }
+                    for rikishi_id in measurement_tasks:
+                        data = next(resp_iter)
+                        measurement_cache[rikishi_id] = {
+                            rec.get("bashoId"): rec for rec in data
+                        }
 
             for rikishi in batch:
                 history = ranking_histories.get(rikishi.id, [])
@@ -127,6 +155,9 @@ class Command(AsyncBaseCommand):
                     shikona_data = pick_shikona(
                         shikona_cache.get(rikishi.id, {}), basho_slug
                     )
+                    measurement_data = pick_measurements(
+                        measurement_cache.get(rikishi.id, {}), basho_slug
+                    )
                     ranking_history_to_create.append(
                         BashoHistory(
                             rikishi=rikishi,
@@ -134,6 +165,8 @@ class Command(AsyncBaseCommand):
                             rank=rank,
                             shikona_en=shikona_data.get("shikonaEn", ""),
                             shikona_jp=shikona_data.get("shikonaJp", ""),
+                            height=measurement_data.get("height"),
+                            weight=measurement_data.get("weight"),
                         )
                     )
 

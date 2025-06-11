@@ -10,6 +10,7 @@ from app.management.commands.ranking import (
     get_existing_keys,
     get_existing_rank,
     get_rikishis,
+    pick_measurements,
     pick_shikona,
 )
 from app.models.basho import Basho
@@ -58,6 +59,16 @@ class RankingCommandTests(SimpleTestCase):
         self.assertEqual(pick_shikona(data, "202402")["shikonaEn"], "Old")
         self.assertEqual(pick_shikona(data, "202404")["shikonaJp"], "新")
         self.assertEqual(pick_shikona(data, "202312"), {})
+
+    def test_pick_measurements(self):
+        """Select the nearest measurement data."""
+        data = {
+            "202401": {"height": 180, "weight": 100},
+            "202403": {"height": 181, "weight": 101},
+        }
+        self.assertEqual(pick_measurements(data, "202402")["height"], 180)
+        self.assertEqual(pick_measurements(data, "202404")["weight"], 101)
+        self.assertEqual(pick_measurements(data, "202312"), {})
 
     def test_shikona_fields_populated(self):
         """Command should populate shikona fields when available."""
@@ -230,6 +241,177 @@ class RankingCommandTests(SimpleTestCase):
             created = mock_bulk.call_args[0][0][0]
             self.assertEqual(created.shikona_en, "")
             self.assertEqual(created.shikona_jp, "")
+
+    def test_measurement_fields_populated(self):
+        """Command should populate measurement fields when available."""
+        rikishi = Rikishi(id=1, name="R", name_jp="R")
+        basho = Basho(year=2025, month=1)
+        basho.slug = "202501"
+        rank = Rank(title="Y", level=1)
+
+        async_mock = AsyncMock
+        with (
+            patch(
+                "app.management.commands.ranking.get_rikishis",
+                new=async_mock(return_value=[rikishi]),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_basho",
+                new=async_mock(return_value={basho.slug: basho}),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_rank",
+                new=async_mock(return_value={}),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_keys",
+                new=async_mock(return_value=set()),
+            ),
+            patch(
+                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                new=async_mock(return_value=(rank, True)),
+            ),
+            patch(
+                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                new=async_mock(),
+            ) as mock_bulk,
+            patch(
+                "app.management.commands.ranking.SumoApiClient",
+            ) as mock_client_cls,
+        ):
+            mock_api = AsyncMock()
+            mock_client_cls.return_value.__aenter__.return_value = mock_api
+            mock_client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_ranking_history.return_value = {
+                1: [{"bashoId": "202501", "rank": "Y1E"}]
+            }
+            mock_api.get_shikonas.return_value = []
+            mock_api.get_measurements.return_value = [
+                {"bashoId": "202501", "height": 180, "weight": 150}
+            ]
+            mock_api.get_basho_by_id.return_value = None
+
+            cmd = Command()
+            cmd.log = lambda *a, **k: None
+            self.run_async(cmd.run())
+
+            created = mock_bulk.call_args[0][0][0]
+            self.assertEqual(created.height, 180)
+            self.assertEqual(created.weight, 150)
+
+    def test_measurement_fallback_previous(self):
+        """Missing measurements should use prior values."""
+        rikishi = Rikishi(id=1, name="R", name_jp="R")
+        basho = Basho(year=2025, month=2)
+        basho.slug = "202502"
+        rank = Rank(title="Y", level=1)
+
+        async_mock = AsyncMock
+        with (
+            patch(
+                "app.management.commands.ranking.get_rikishis",
+                new=async_mock(return_value=[rikishi]),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_basho",
+                new=async_mock(return_value={basho.slug: basho}),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_rank",
+                new=async_mock(return_value={}),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_keys",
+                new=async_mock(return_value=set()),
+            ),
+            patch(
+                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                new=async_mock(return_value=(rank, True)),
+            ),
+            patch(
+                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                new=async_mock(),
+            ) as mock_bulk,
+            patch(
+                "app.management.commands.ranking.SumoApiClient",
+            ) as mock_client_cls,
+        ):
+            mock_api = AsyncMock()
+            mock_client_cls.return_value.__aenter__.return_value = mock_api
+            mock_client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_ranking_history.return_value = {
+                1: [{"bashoId": "202502", "rank": "Y1E"}]
+            }
+            mock_api.get_shikonas.return_value = []
+            mock_api.get_measurements.return_value = [
+                {"bashoId": "202501", "height": 180, "weight": 150}
+            ]
+            mock_api.get_basho_by_id.return_value = None
+
+            cmd = Command()
+            cmd.log = lambda *a, **k: None
+            self.run_async(cmd.run())
+
+            created = mock_bulk.call_args[0][0][0]
+            self.assertEqual(created.height, 180)
+            self.assertEqual(created.weight, 150)
+
+    def test_no_future_measurement_used(self):
+        """Measurements from future basho should be ignored."""
+        rikishi = Rikishi(id=1, name="R", name_jp="R")
+        basho = Basho(year=2025, month=1)
+        basho.slug = "202501"
+        rank = Rank(title="Y", level=1)
+
+        async_mock = AsyncMock
+        with (
+            patch(
+                "app.management.commands.ranking.get_rikishis",
+                new=async_mock(return_value=[rikishi]),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_basho",
+                new=async_mock(return_value={basho.slug: basho}),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_rank",
+                new=async_mock(return_value={}),
+            ),
+            patch(
+                "app.management.commands.ranking.get_existing_keys",
+                new=async_mock(return_value=set()),
+            ),
+            patch(
+                "app.management.commands.ranking.Rank.objects.aget_or_create",
+                new=async_mock(return_value=(rank, True)),
+            ),
+            patch(
+                "app.management.commands.ranking.BashoHistory.objects.abulk_create",
+                new=async_mock(),
+            ) as mock_bulk,
+            patch(
+                "app.management.commands.ranking.SumoApiClient",
+            ) as mock_client_cls,
+        ):
+            mock_api = AsyncMock()
+            mock_client_cls.return_value.__aenter__.return_value = mock_api
+            mock_client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_ranking_history.return_value = {
+                1: [{"bashoId": "202501", "rank": "Y1E"}]
+            }
+            mock_api.get_shikonas.return_value = []
+            mock_api.get_measurements.return_value = [
+                {"bashoId": "202503", "height": 181, "weight": 151}
+            ]
+            mock_api.get_basho_by_id.return_value = None
+
+            cmd = Command()
+            cmd.log = lambda *a, **k: None
+            self.run_async(cmd.run())
+
+            created = mock_bulk.call_args[0][0][0]
+            self.assertIsNone(created.height)
+            self.assertIsNone(created.weight)
 
     def test_log_and_handle(self):
         """Ensure synchronous wrapper and logger behave."""
