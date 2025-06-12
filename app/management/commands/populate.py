@@ -2,8 +2,9 @@ from datetime import datetime
 
 import pycountry
 from asgiref.sync import sync_to_async
+from django.utils.text import slugify
 
-from app.constants import DIVISION_LEVELS
+from app.constants import DIVISION_LEVELS, RANK_DIVISION_LEVELS, RANKING_LEVELS
 from app.management.commands import AsyncBaseCommand
 from app.models.division import Division
 from app.models.rank import Rank
@@ -104,13 +105,18 @@ class Command(AsyncBaseCommand):
                 parts = rank_str.split(" ")
                 key = tuple(parts)
                 if key not in rank_cache:
-                    if len(parts) == 3:
-                        rank = await Rank.objects.aget_or_create(
-                            title=parts[0], order=parts[1], direction=parts[2]
-                        )
-                    else:
-                        rank = await Rank.objects.aget_or_create(title=parts[0])
-                    rank_cache[key] = rank[0]
+                    division_name, _ = RANK_DIVISION_LEVELS[parts[0]]
+                    division = await Division.objects.aget(name=division_name)
+                    level = RANKING_LEVELS[parts[0]]
+                    slug = slugify(rank_str)
+                    rank, _ = await Rank.objects.aget_or_create(
+                        title=parts[0],
+                        order=parts[1] if len(parts) >= 2 else None,
+                        direction=parts[2] if len(parts) >= 3 else None,
+                        division=division,
+                        defaults={"level": level, "slug": slug},
+                    )
+                    rank_cache[key] = rank
                 rikishi.rank = rank_cache[key]
 
             # Heya

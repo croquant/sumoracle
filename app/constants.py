@@ -67,6 +67,29 @@ RANKING_LEVELS = {
     "Banzuke-gai": 12,
 }
 
+# Map each rank name to the division it belongs to along with the
+# numerical ranking level.
+RANK_DIVISION_LEVELS = {
+    RankName.YOKOZUNA: ("Makuuchi", RANKING_LEVELS[RankName.YOKOZUNA]),
+    RankName.OZEKI: ("Makuuchi", RANKING_LEVELS[RankName.OZEKI]),
+    RankName.SEKIWAKE: ("Makuuchi", RANKING_LEVELS[RankName.SEKIWAKE]),
+    RankName.KOMUSUBI: ("Makuuchi", RANKING_LEVELS[RankName.KOMUSUBI]),
+    RankName.MAEGASHIRA: (
+        "Makuuchi",
+        RANKING_LEVELS[RankName.MAEGASHIRA],
+    ),
+    RankName.JURYO: ("Juryo", RANKING_LEVELS[RankName.JURYO]),
+    RankName.MAKUSHITA: ("Makushita", RANKING_LEVELS[RankName.MAKUSHITA]),
+    RankName.SANDANME: ("Sandanme", RANKING_LEVELS[RankName.SANDANME]),
+    RankName.JONIDAN: ("Jonidan", RANKING_LEVELS[RankName.JONIDAN]),
+    RankName.JONOKUCHI: ("Jonokuchi", RANKING_LEVELS[RankName.JONOKUCHI]),
+    RankName.MAEZUMO: ("Mae-zumo", RANKING_LEVELS[RankName.MAEZUMO]),
+    RankName.BANZUKE_GAI: (
+        "Banzuke-gai",
+        RANKING_LEVELS[RankName.BANZUKE_GAI],
+    ),
+}
+
 
 class Direction(models.TextChoices):
     EAST = "East", "East"
