@@ -5,7 +5,9 @@ from unittest.mock import AsyncMock, patch
 from django.core.management import call_command
 from django.test import SimpleTestCase
 
+from app.constants import RANKING_LEVELS
 from app.management.commands.populate import Command
+from app.models.division import Division
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Shusshin
 from libs.sumoapi import SumoApiError
@@ -53,6 +55,10 @@ class PopulateCommandTests(SimpleTestCase):
                 "app.management.commands.populate.Division.objects.aget_or_create",
                 new=async_mock(),
             ),
+            patch(
+                "app.management.commands.populate.Division.objects.aget",
+                new=async_mock(return_value=Division(name="Makuuchi")),
+            ),
             patch("app.management.commands.populate.Rikishi.objects") as ro,
             patch("app.management.commands.populate.Rank.objects") as rao,
             patch("app.management.commands.populate.Heya.objects") as ho,
@@ -99,6 +105,90 @@ class PopulateCommandTests(SimpleTestCase):
             ro.abulk_create.assert_awaited_once()
             ro.abulk_update.assert_not_called()
 
+    def test_rank_created_with_defaults(self):
+        """New ranks should include level and division defaults."""
+        rikishi_data = [
+            {
+                "id": 1,
+                "shikonaEn": "Test",
+                "currentRank": "Yokozuna 1 East",
+            }
+        ]
+
+        def passthrough(func):
+            async def inner(*args, **kwargs):
+                return func()
+
+            return inner
+
+        async_mock = AsyncMock
+        division = Division(name="Makuuchi", name_short="M", level=1)
+        with (
+            patch(
+                "app.management.commands.populate.SumoApiClient",
+            ) as client_cls,
+            patch(
+                "app.management.commands.populate.sync_to_async",
+                side_effect=passthrough,
+            ),
+            patch(
+                "app.management.commands.populate.Division.objects.aget_or_create",
+                new=async_mock(),
+            ),
+            patch(
+                "app.management.commands.populate.Division.objects.aget",
+                new=async_mock(return_value=division),
+            ),
+            patch("app.management.commands.populate.Rikishi.objects") as ro,
+            patch("app.management.commands.populate.Rank.objects") as rao,
+            patch("app.management.commands.populate.Heya.objects") as ho,
+            patch("app.management.commands.populate.Shusshin.objects") as so,
+            patch(
+                "app.management.commands.populate.pycountry.countries.search_fuzzy"
+            ) as search_fuzzy,
+        ):
+            ro.all.return_value = []
+            ro.abulk_create = async_mock()
+            ro.abulk_update = async_mock()
+
+            rao.all.return_value = []
+            rao.aget_or_create = async_mock(
+                return_value=(Rank(title="Yokozuna"), True)
+            )
+
+            ho.all.return_value = []
+            ho.aget_or_create = async_mock(return_value=(Heya(name="H"), True))
+
+            so.all.return_value = []
+            so.aget_or_create = async_mock(
+                return_value=(Shusshin(name="S"), True)
+            )
+
+            search_fuzzy.return_value = [SimpleNamespace(name="Japan")]
+
+            mock_api = AsyncMock()
+            client_cls.return_value.__aenter__.return_value = mock_api
+            client_cls.return_value.__aexit__.return_value = None
+            mock_api.get_all_rikishi.return_value = rikishi_data
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                call_command("populate")
+            finally:
+                asyncio.set_event_loop(asyncio.new_event_loop())
+                loop.close()
+
+            kwargs = rao.aget_or_create.call_args.kwargs
+            self.assertEqual(kwargs["division"], division)
+            self.assertEqual(
+                kwargs["defaults"],
+                {
+                    "level": RANKING_LEVELS["Yokozuna"],
+                    "slug": "yokozuna-1-east",
+                },
+            )
+
     def test_updates_existing_rikishi(self):
         """Existing entries should trigger bulk update."""
         rikishi_data = [
@@ -130,6 +220,10 @@ class PopulateCommandTests(SimpleTestCase):
             patch(
                 "app.management.commands.populate.Division.objects.aget_or_create",
                 new=async_mock(),
+            ),
+            patch(
+                "app.management.commands.populate.Division.objects.aget",
+                new=async_mock(return_value=Division(name="Makuuchi")),
             ),
             patch("app.management.commands.populate.Rikishi.objects") as ro,
             patch("app.management.commands.populate.Rank.objects") as rao,
@@ -203,6 +297,10 @@ class PopulateCommandTests(SimpleTestCase):
             patch(
                 "app.management.commands.populate.Division.objects.aget_or_create",
                 new=async_mock(),
+            ),
+            patch(
+                "app.management.commands.populate.Division.objects.aget",
+                new=async_mock(return_value=Division(name="Makuuchi")),
             ),
             patch("app.management.commands.populate.Rikishi.objects") as ro,
             patch("app.management.commands.populate.Rank.objects") as rao,
