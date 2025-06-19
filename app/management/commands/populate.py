@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pycountry
 from asgiref.sync import sync_to_async
+from django.utils.text import slugify
 
 from app.constants import DIVISION_LEVELS
 from app.management.commands import AsyncBaseCommand
@@ -66,6 +67,9 @@ class Command(AsyncBaseCommand):
                 (s.name, s.international): s for s in Shusshin.objects.all()
             }
         )()
+        division_cache = await sync_to_async(
+            lambda: {d.name: d for d in Division.objects.all()}
+        )()
 
         new_rikishi = []
         updated_rikishi = []
@@ -103,13 +107,24 @@ class Command(AsyncBaseCommand):
             if rank_str:
                 parts = rank_str.split(" ")
                 key = tuple(parts)
+                division = division_cache.get(parts[0]) or division_cache.get(
+                    "Makuuchi"
+                )
                 if key not in rank_cache:
                     if len(parts) == 3:
                         rank = await Rank.objects.aget_or_create(
-                            title=parts[0], order=parts[1], direction=parts[2]
+                            slug=slugify(rank_str),
+                            title=parts[0],
+                            order=parts[1],
+                            direction=parts[2],
+                            division=division,
                         )
                     else:
-                        rank = await Rank.objects.aget_or_create(title=parts[0])
+                        rank = await Rank.objects.aget_or_create(
+                            slug=slugify(rank_str),
+                            title=parts[0],
+                            division=division,
+                        )
                     rank_cache[key] = rank[0]
                 rikishi.rank = rank_cache[key]
 

@@ -24,7 +24,6 @@ class Rank(models.Model):
     title = models.CharField(
         max_length=20, choices=RankName.choices, editable=False
     )
-    level = models.PositiveSmallIntegerField(editable=False)
     order = models.PositiveSmallIntegerField(
         null=True, blank=True, editable=False
     )
@@ -45,16 +44,11 @@ class Rank(models.Model):
             if self.direction == "West"
             else 0
         )
-        return (
-            self.division.level * 10000
-            + self.level * 100
-            + (self.order or 0) * 2
-            + dir_val
-        )
+        return self.division.level * 10000 + (self.order or 0) * 2 + dir_val
 
     class Meta:
         unique_together = ("title", "order", "direction", "division")
-        ordering = ["division__level", "level", "order", "direction"]
+        ordering = ["division__level", "order", "direction"]
 
     def __str__(self):
         return self.name()
