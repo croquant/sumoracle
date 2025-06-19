@@ -1,6 +1,9 @@
 import pycountry
 from django.db import models
+from django.db.models import Case, IntegerField, Value, When
 from django.utils.text import slugify
+
+from app.constants import RANKING_LEVELS
 
 from .rank import Rank
 
@@ -48,6 +51,38 @@ class Shusshin(models.Model):
         verbose_name_plural = "Shusshin"
 
 
+class RikishiQuerySet(models.QuerySet):
+    def banzuke(self):
+        level_case = Case(
+            *[
+                When(rank__title=title, then=Value(level))
+                for title, level in RANKING_LEVELS.items()
+            ],
+            default=Value(99),
+            output_field=IntegerField(),
+        )
+        missing_case = Case(
+            When(rank__isnull=True, then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+        return self.annotate(
+            rank_level=level_case, rank_missing=missing_case
+        ).order_by(
+            "rank_missing",
+            "rank__division__level",
+            "rank_level",
+            "rank__order",
+            "rank__direction",
+            "name",
+        )
+
+
+class RikishiManager(models.Manager.from_queryset(RikishiQuerySet)):
+    def get_queryset(self):
+        return super().get_queryset().banzuke()
+
+
 class Rikishi(models.Model):
     """Sumo wrestler with optional ``Rank``, ``Heya`` and ``Shusshin`` links."""
 
@@ -91,9 +126,10 @@ class Rikishi(models.Model):
     debut = models.DateField(blank=True, null=True)
     intai = models.DateField(blank=True, null=True)
 
+    objects = RikishiManager()
+
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ["name"]
         verbose_name_plural = "Rikishi"
