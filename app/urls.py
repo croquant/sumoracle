@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import (
+    BashoDetailView,
+    BashoListView,
     DivisionDetailView,
     DivisionListView,
     IndexView,
@@ -21,5 +23,11 @@ urlpatterns = [
         "division/<slug:slug>",
         DivisionDetailView.as_view(),
         name="division-detail",
+    ),
+    path("basho/", BashoListView.as_view(), name="basho-list"),
+    path(
+        "basho/<slug:slug>",
+        BashoDetailView.as_view(),
+        name="basho-detail",
     ),
 ]
