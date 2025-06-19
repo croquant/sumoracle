@@ -1,12 +1,12 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from app.constants import Direction, RankName
 from app.models.basho import Basho
 from app.models.division import Division
 from app.models.history import BashoHistory
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
+from libs.constants import Direction, RankName
 
 
 class RikishiDetailViewTests(TestCase):

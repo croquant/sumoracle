@@ -1,6 +1,6 @@
 from django.db import models
 
-from app.constants import (
+from libs.constants import (
     DIRECTION_NAMES_SHORT,
     RANK_NAMES_SHORT,
     Direction,
