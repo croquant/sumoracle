@@ -22,3 +22,8 @@ class DivisionDetailViewTests(TestCase):
             reverse("division-detail", args=[division.name])
         )
         self.assertTemplateUsed(response, "division_detail.html")
+
+    def test_lowercase_slug_returns_page(self):
+        """Using a lowercase slug should still return the page."""
+        response = self.client.get("/division/makuuchi")
+        self.assertEqual(response.status_code, 200)
