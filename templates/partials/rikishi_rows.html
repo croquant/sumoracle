@@ -1,0 +1,16 @@
+{% for rikishi in object_list %}
+<tr>
+    <td>{{ rikishi.rank }}</td>
+    <td>
+        <a href="{% url 'rikishi-detail' rikishi.id %}">{{ rikishi.name }}</a>
+    </td>
+    <td>{{ rikishi.name_jp }}</td>
+</tr>
+{% endfor %}
+{% if page_obj.has_next %}
+<tr hx-get="{% url 'rikishi-list' %}?page={{ page_obj.next_page_number }}{% if active_only %}&active=1{% endif %}"
+    hx-trigger="revealed"
+    hx-swap="outerHTML">
+    <td colspan="2">Loading...</td>
+</tr>
+{% endif %}
