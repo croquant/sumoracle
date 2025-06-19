@@ -1,6 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{{ division.name }}{% endblock %}
+
 {% block content %}
-    <h2>{{ division.name }}</h2>
-    <p>Short name: {{ division.name_short }}</p>
-    <p>Level: {{ division.level }}</p>
+<div class="card my-3">
+    <div class="card-body">
+        <h2 class="card-title">{{ division.name }}</h2>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Short name: {{ division.name_short }}</li>
+            <li class="list-group-item">Level: {{ division.level }}</li>
+        </ul>
+    </div>
+</div>
 {% endblock %}
 
