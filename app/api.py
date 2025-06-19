@@ -4,7 +4,7 @@ from typing import List, Optional
 from django.db.models import Q
 from ninja import NinjaAPI, Schema
 
-from .models import Division, Rikishi
+from .models import Basho, Bout, Division, Rikishi
 
 
 class RikishiSchema(Schema):
@@ -27,6 +27,28 @@ class DivisionSchema(Schema):
     name: str
     name_short: str
     level: int
+
+
+class BashoSchema(Schema):
+    """Serialized representation of a ``Basho``."""
+
+    slug: str
+    year: int
+    month: int
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+
+class BoutSchema(Schema):
+    """Serialized representation of a ``Bout``."""
+
+    day: int
+    match_no: int
+    division: str
+    east: str
+    west: str
+    kimarite: str
+    winner: str
 
 
 api = NinjaAPI()
@@ -63,6 +85,32 @@ def _division_to_schema(division: Division) -> DivisionSchema:
         name=division.name,
         name_short=division.name_short,
         level=division.level,
+    )
+
+
+def _basho_to_schema(basho: Basho) -> BashoSchema:
+    """Convert a :class:`Basho` instance to :class:`BashoSchema`."""
+
+    return BashoSchema(
+        slug=basho.slug,
+        year=basho.year,
+        month=basho.month,
+        start_date=basho.start_date,
+        end_date=basho.end_date,
+    )
+
+
+def _bout_to_schema(bout: Bout) -> BoutSchema:
+    """Convert a :class:`Bout` instance to :class:`BoutSchema`."""
+
+    return BoutSchema(
+        day=bout.day,
+        match_no=bout.match_no,
+        division=bout.division.name,
+        east=bout.east_shikona,
+        west=bout.west_shikona,
+        kimarite=bout.kimarite,
+        winner=bout.winner.name,
     )
 
 
@@ -116,3 +164,41 @@ def division_detail(request, slug: str):
 
     division = Division.objects.get(name__iexact=slug)
     return _division_to_schema(division)
+
+
+@api.get("/basho/", response=List[BashoSchema])
+def basho_list(request):
+    """Return a list of basho ordered by most recent."""
+
+    queryset = Basho.objects.all().order_by("-year", "-month")
+    return [_basho_to_schema(b) for b in queryset]
+
+
+@api.get("/basho/{slug}/", response=BashoSchema)
+def basho_detail(request, slug: str):
+    """Return details for a single basho."""
+
+    basho = Basho.objects.get(slug=slug)
+    return _basho_to_schema(basho)
+
+
+@api.get("/basho/{slug}/bouts/", response=List[BoutSchema])
+def basho_bouts(
+    request,
+    slug: str,
+    division: Optional[str] = None,
+    day: Optional[int] = None,
+    rikishi_id: Optional[int] = None,
+):
+    """Return bouts for a basho with optional filters."""
+
+    queryset = Bout.objects.filter(basho__slug=slug)
+    if division:
+        queryset = queryset.filter(division__name=division)
+    if day is not None:
+        queryset = queryset.filter(day=day)
+    if rikishi_id is not None:
+        queryset = queryset.filter(
+            Q(east__id=rikishi_id) | Q(west__id=rikishi_id)
+        )
+    return [_bout_to_schema(b) for b in queryset]
