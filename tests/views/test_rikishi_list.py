@@ -48,3 +48,10 @@ class RikishiListViewTests(TestCase):
             Rikishi.objects.filter(intai__isnull=True).count(),
         )
         self.assertTrue(response.context["active_only"])
+
+    def test_names_link_to_detail(self):
+        """Each rikishi name should link to the detail view."""
+        response = self.client.get(reverse("rikishi-list"))
+        for rikishi in Rikishi.objects.all():
+            detail_url = reverse("rikishi-detail", args=[rikishi.id])
+            self.assertContains(response, f'href="{detail_url}"')
