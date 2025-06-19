@@ -1,0 +1,59 @@
+{% block content %}
+    <h2>Rikishi</h2>
+    <p>
+        <a href="{{ toggle_url }}">
+            {% if active_only %}Show all{% else %}Show active{% endif %}
+        </a>
+    </p>
+    <table id="rikishi-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Japanese</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rikishi in object_list %}
+                <tr>
+                    <td>{{ rikishi.name }}</td>
+                    <td>{{ rikishi.name_jp }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        let page = 2;
+        const active = {{ active_only|yesno:"true,false" }};
+        let loading = false;
+        async function load() {
+            if (loading) {
+                return;
+            }
+            if (
+                window.innerHeight + window.scrollY >=
+                document.body.offsetHeight - 20
+            ) {
+                loading = true;
+                const url =
+                    "{% url 'rikishi-list' %}?page=" +
+                    page +
+                    (active ? "&active=1" : "");
+                const resp = await fetch(url);
+                const html = await resp.text();
+                const doc = new DOMParser().parseFromString(html, "text/html");
+                const rows =
+                    doc.querySelectorAll("#rikishi-table tbody tr");
+                if (rows.length === 0) {
+                    window.removeEventListener("scroll", load);
+                } else {
+                    document
+                        .querySelector("#rikishi-table tbody")
+                        .append(...rows);
+                    page += 1;
+                    loading = false;
+                }
+            }
+        }
+        window.addEventListener("scroll", load);
+    </script>
+{% endblock %}
