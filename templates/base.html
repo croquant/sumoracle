@@ -1,17 +1,17 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-core="elegant">
 <head>
     <meta charset="utf-8">
     <title>{% block title %}Sumoracle{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/halfmoon.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'css/halfmoon.elegant.css' %}">
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/htmx.min.js' %}"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="with-custom-webkit-scrollbars">
-    <nav class="navbar navbar-expand-lg sticky-top">
+    <nav class="navbar navbar-expand-lg sticky-top text-bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'index' %}">Sumoracle</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-main" aria-controls="navbar-main" aria-expanded="false" aria-label="Toggle navigation">
