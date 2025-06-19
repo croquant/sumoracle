@@ -4,7 +4,7 @@ from typing import List, Optional
 from django.db.models import Q
 from ninja import NinjaAPI, Schema
 
-from .models import Rikishi
+from .models import Division, Rikishi
 
 
 class RikishiSchema(Schema):
@@ -19,6 +19,14 @@ class RikishiSchema(Schema):
     division: Optional[str] = None
     international: bool = False
     intai: Optional[date] = None
+
+
+class DivisionSchema(Schema):
+    """Serialized representation of a ``Division``."""
+
+    name: str
+    name_short: str
+    level: int
 
 
 api = NinjaAPI()
@@ -45,6 +53,16 @@ def _rikishi_to_schema(rikishi: Rikishi) -> RikishiSchema:
             rikishi.shusshin.international if rikishi.shusshin else False
         ),
         intai=rikishi.intai,
+    )
+
+
+def _division_to_schema(division: Division) -> DivisionSchema:
+    """Convert a :class:`Division` instance to :class:`DivisionSchema`."""
+
+    return DivisionSchema(
+        name=division.name,
+        name_short=division.name_short,
+        level=division.level,
     )
 
 
@@ -82,3 +100,19 @@ def rikishi_detail(request, rikishi_id: int):
 
     rikishi = Rikishi.objects.get(pk=rikishi_id)
     return _rikishi_to_schema(rikishi)
+
+
+@api.get("/division/", response=List[DivisionSchema])
+def division_list(request):
+    """Return a list of all divisions."""
+
+    queryset = Division.objects.all()
+    return [_division_to_schema(d) for d in queryset]
+
+
+@api.get("/division/{slug}/", response=DivisionSchema)
+def division_detail(request, slug: str):
+    """Return details for a single division."""
+
+    division = Division.objects.get(name__iexact=slug)
+    return _division_to_schema(division)

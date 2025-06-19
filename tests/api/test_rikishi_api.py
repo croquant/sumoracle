@@ -2,10 +2,10 @@ from datetime import date
 
 from django.test import TestCase
 
-from app.constants import Direction, RankName
 from app.models.division import Division
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
+from libs.constants import Direction, RankName
 
 
 class RikishiApiTests(TestCase):
