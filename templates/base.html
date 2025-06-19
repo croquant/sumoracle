@@ -5,13 +5,34 @@
     <meta charset="utf-8">
     <title>{% block title %}Sumoracle{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/halfmoon.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/halfmoon.min.js' %}"></script>
     <script src="{% static 'js/htmx.min.js' %}"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="with-custom-webkit-scrollbars">
-    <nav class="navbar">
-        <!-- Navigation placeholder -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">Sumoracle</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-main" aria-controls="navbar-main" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar-main">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'division-list' %}">Divisions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'rikishi-list' %}">Rikishi</a>
+                    </li>
+                </ul>
+                <button class="btn btn-sm btn-secondary" type="button" onclick="halfmoon.toggleDarkMode()">Toggle theme</button>
+            </div>
+        </div>
     </nav>
     <main class="container">
         {% block content %}{% endblock %}
