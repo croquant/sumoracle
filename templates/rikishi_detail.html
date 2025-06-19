@@ -1,13 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{{ rikishi.name }}{% endblock %}
+
 {% block content %}
-    <h2>{{ rikishi.name }}</h2>
-    <p>Rank: {{ rikishi.rank }}</p>
-    <p>Heya: {{ rikishi.heya }}</p>
-    <p>Shusshin: {{ rikishi.shusshin }}</p>
-    <p>Height: {{ rikishi.height }} / Weight: {{ rikishi.weight }}</p>
-    <h3>Basho History</h3>
-    <ul>
-        {% for record in rikishi.ranking_history.all %}
-            <li>{{ record.basho.slug }} - {{ record.rank.long_name }}</li>
-        {% endfor %}
-    </ul>
+<div class="card my-3">
+    <div class="card-body">
+        <h2 class="card-title">{{ rikishi.name }}</h2>
+        <p>
+            Rank:
+            <span class="badge badge-primary">
+                {{ rikishi.rank.long_name }}
+            </span>
+        </p>
+        <p>
+            Heya:
+            <span class="badge badge-secondary">{{ rikishi.heya }}</span>
+        </p>
+        <p>
+            Shusshin:
+            <span class="badge badge-secondary">{{ rikishi.shusshin }}</span>
+        </p>
+        <p>Height: {{ rikishi.height }} / Weight: {{ rikishi.weight }}</p>
+        <h3 class="mt-4">Basho History</h3>
+        <ul class="list-group list-group-flush">
+            {% for record in rikishi.ranking_history.all %}
+            <li class="list-group-item">
+                <span class="badge badge-primary">{{ record.basho.slug }}</span>
+                {{ record.rank.long_name }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 {% endblock %}
