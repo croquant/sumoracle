@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Sumoracle{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/halfmoon.min.css' %}">
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="with-custom-webkit-scrollbars">
+    <nav class="navbar">
+        <!-- Navigation placeholder -->
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
