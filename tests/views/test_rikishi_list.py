@@ -13,18 +13,20 @@ class RikishiListViewTests(TestCase):
     """Verify behaviour of the rikishi list view."""
 
     def setUp(self):
-        division = Division.objects.get(name="Makuuchi")
+        self.makuuchi = Division.objects.get(name="Makuuchi")
+        self.juryo = Division.objects.get(name="Juryo")
+
         self.rank1 = Rank.objects.create(
             slug="y1e",
-            division=division,
+            division=self.makuuchi,
             title=RankName.YOKOZUNA,
             order=1,
             direction=Direction.EAST,
         )
-        self.rank2 = Rank.objects.create(
-            slug="o1e",
-            division=division,
-            title=RankName.OZEKI,
+        self.rank_j = Rank.objects.create(
+            slug="j1e",
+            division=self.juryo,
+            title=RankName.JURYO,
             order=1,
             direction=Direction.EAST,
         )
@@ -49,7 +51,7 @@ class RikishiListViewTests(TestCase):
             name="Kakuryu",
             name_jp="鶴竜",
             heya=self.heya2,
-            rank=self.rank2,
+            rank=self.rank_j,
             shusshin=self.shusshin_mgl,
         )
         Rikishi.objects.create(
@@ -113,9 +115,9 @@ class RikishiListViewTests(TestCase):
         names = [r.name for r in response.context["object_list"]]
         self.assertEqual(names, ["Kakuryu"])
 
-    def test_rank_filter(self):
-        """Filtering by rank should return rikishi with that rank."""
-        url = reverse("rikishi-list") + f"?rank={self.rank1.slug}"
+    def test_division_filter(self):
+        """Filtering by division should return matching rikishi."""
+        url = reverse("rikishi-list") + f"?division={self.makuuchi.name}"
         response = self.client.get(url)
         names = [r.name for r in response.context["object_list"]]
         self.assertEqual(names, ["Hakuho"])
@@ -126,3 +128,10 @@ class RikishiListViewTests(TestCase):
         response = self.client.get(url)
         names = [r.name for r in response.context["object_list"]]
         self.assertEqual(names, ["Kakuryu"])
+
+    def test_status_field_display(self):
+        """Rows should indicate whether a rikishi is active or retired."""
+        url = reverse("rikishi-list") + "?include_retired=1"
+        response = self.client.get(url)
+        self.assertContains(response, "Active")
+        self.assertContains(response, "Retired")
