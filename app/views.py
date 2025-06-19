@@ -38,3 +38,11 @@ class RikishiListView(ListView):
         base = self.request.path
         context["toggle_url"] = base if active else f"{base}?active=1"
         return context
+
+
+class RikishiDetailView(DetailView):
+    model = Rikishi
+    template_name = "rikishi_detail.html"
+    slug_field = "id"
+    slug_url_kwarg = "pk"
+    context_object_name = "rikishi"

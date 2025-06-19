@@ -49,10 +49,7 @@ class PopulateCommandTests(SimpleTestCase):
                 "app.management.commands.populate.sync_to_async",
                 side_effect=passthrough,
             ),
-            patch(
-                "app.management.commands.populate.Division.objects.aget_or_create",
-                new=async_mock(),
-            ),
+            patch("app.management.commands.populate.Division.objects") as do,
             patch("app.management.commands.populate.Rikishi.objects") as ro,
             patch("app.management.commands.populate.Rank.objects") as rao,
             patch("app.management.commands.populate.Heya.objects") as ho,
@@ -61,6 +58,9 @@ class PopulateCommandTests(SimpleTestCase):
                 "app.management.commands.populate.pycountry.countries.search_fuzzy"
             ) as search_fuzzy,
         ):
+            do.all.return_value = []
+            do.aget_or_create = async_mock()
+
             ro.all.return_value = []
             ro.abulk_create = async_mock()
             ro.abulk_update = async_mock()
@@ -127,15 +127,15 @@ class PopulateCommandTests(SimpleTestCase):
                 "app.management.commands.populate.sync_to_async",
                 side_effect=passthrough,
             ),
-            patch(
-                "app.management.commands.populate.Division.objects.aget_or_create",
-                new=async_mock(),
-            ),
+            patch("app.management.commands.populate.Division.objects") as do,
             patch("app.management.commands.populate.Rikishi.objects") as ro,
             patch("app.management.commands.populate.Rank.objects") as rao,
             patch("app.management.commands.populate.Heya.objects") as ho,
             patch("app.management.commands.populate.Shusshin.objects") as so,
         ):
+            do.all.return_value = []
+            do.aget_or_create = async_mock()
+
             ro.all.return_value = [existing]
             ro.abulk_create = async_mock()
             ro.abulk_update = async_mock()
@@ -200,10 +200,7 @@ class PopulateCommandTests(SimpleTestCase):
                 "app.management.commands.populate.sync_to_async",
                 side_effect=passthrough,
             ),
-            patch(
-                "app.management.commands.populate.Division.objects.aget_or_create",
-                new=async_mock(),
-            ),
+            patch("app.management.commands.populate.Division.objects") as do,
             patch("app.management.commands.populate.Rikishi.objects") as ro,
             patch("app.management.commands.populate.Rank.objects") as rao,
             patch("app.management.commands.populate.Heya.objects") as ho,
@@ -213,6 +210,9 @@ class PopulateCommandTests(SimpleTestCase):
             ) as search_fuzzy,
             patch("app.management.commands.populate.Command.warn") as warn_mock,
         ):
+            do.all.return_value = []
+            do.aget_or_create = async_mock()
+
             ro.all.return_value = []
             ro.abulk_create = async_mock()
             ro.abulk_update = async_mock()
