@@ -14,52 +14,8 @@
             </tr>
         </thead>
         <tbody>
-            {% for rikishi in object_list %}
-                <tr>
-                    <td>{{ rikishi.rank }}</td>
-                    <td>
-                        <a href="{% url 'rikishi-detail' rikishi.id %}">
-                            {{ rikishi.name }}
-                        </a>
-                    </td>
-                    <td>{{ rikishi.name_jp }}</td>
-                </tr>
-            {% endfor %}
+            {% include "partials/rikishi_rows.html" %}
         </tbody>
     </table>
-    <script>
-        let page = 2;
-        const active = {{ active_only|yesno:"true,false" }};
-        let loading = false;
-        async function load() {
-            if (loading) {
-                return;
-            }
-            if (
-                window.innerHeight + window.scrollY >=
-                document.body.offsetHeight - 20
-            ) {
-                loading = true;
-                const url =
-                    "{% url 'rikishi-list' %}?page=" +
-                    page +
-                    (active ? "&active=1" : "");
-                const resp = await fetch(url);
-                const html = await resp.text();
-                const doc = new DOMParser().parseFromString(html, "text/html");
-                const rows =
-                    doc.querySelectorAll("#rikishi-table tbody tr");
-                if (rows.length === 0) {
-                    window.removeEventListener("scroll", load);
-                } else {
-                    document
-                        .querySelector("#rikishi-table tbody")
-                        .append(...rows);
-                    page += 1;
-                    loading = false;
-                }
-            }
-        }
-        window.addEventListener("scroll", load);
-    </script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 {% endblock %}

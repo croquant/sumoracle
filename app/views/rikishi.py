@@ -7,6 +7,12 @@ class RikishiListView(ListView):
     model = Rikishi
     template_name = "rikishi_list.html"
     paginate_by = 50
+    partial_template_name = "partials/rikishi_rows.html"
+
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request"):
+            return [self.partial_template_name]
+        return [self.template_name]
 
     def get_queryset(self):
         queryset = super().get_queryset()
