@@ -1,63 +1,14 @@
-from datetime import date
 from typing import List, Optional
 
 from django.db.models import Q
-from ninja import NinjaAPI, Schema
+from ninja import NinjaAPI
 
 from .models import Basho, Bout, Division, Rikishi
-
-
-class RikishiSchema(Schema):
-    """Serialized representation of a ``Rikishi``."""
-
-    id: int
-    name: str
-    name_jp: str
-    heya: Optional[str] = None
-    shusshin: Optional[str] = None
-    rank: Optional[str] = None
-    division: Optional[str] = None
-    international: bool = False
-    intai: Optional[date] = None
-
-
-class DivisionSchema(Schema):
-    """Serialized representation of a ``Division``."""
-
-    name: str
-    name_short: str
-    level: int
-
-
-class BashoSchema(Schema):
-    """Serialized representation of a ``Basho``."""
-
-    slug: str
-    year: int
-    month: int
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-
-
-class BoutSchema(Schema):
-    """Serialized representation of a ``Bout``."""
-
-    day: int
-    match_no: int
-    division: str
-    east: str
-    west: str
-    kimarite: str
-    winner: str
-
+from .routes import root_router
+from .schemas import BashoSchema, BoutSchema, DivisionSchema, RikishiSchema
 
 api = NinjaAPI()
-
-
-@api.get("")
-def root(request):
-    """Return a simple confirmation message."""
-    return {"status": "ok"}
+api.add_router("", root_router)
 
 
 def _rikishi_to_schema(rikishi: Rikishi) -> RikishiSchema:
