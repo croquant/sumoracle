@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{% static 'css/halfmoon.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/halfmoon.min.js' %}"></script>
     <script src="{% static 'js/htmx.min.js' %}"></script>
     {% block extra_head %}{% endblock %}
 </head>
@@ -30,12 +29,20 @@
                         <a class="nav-link" href="{% url 'rikishi-list' %}">Rikishi</a>
                     </li>
                 </ul>
-                <button class="btn btn-sm btn-secondary" type="button" onclick="halfmoon.toggleDarkMode()">Toggle theme</button>
+                <button class="btn btn-sm btn-secondary" id="theme-toggle" type="button">Toggle theme</button>
             </div>
         </div>
     </nav>
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+    <script>
+        const toggleButton = document.getElementById("theme-toggle");
+        toggleButton.addEventListener("click", () => {
+            const html = document.documentElement;
+            const mode = html.dataset.bsTheme === "dark" ? "light" : "dark";
+            html.dataset.bsTheme = mode;
+        });
+    </script>
 </body>
 </html>
