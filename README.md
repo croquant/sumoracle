@@ -14,7 +14,7 @@ This project requires **Python 3.12** or later.
    python -m venv .venv
    source .venv/bin/activate
    ```
-2. Install the Python requirements:
+2. Install the Python requirements (includes `django-ninja`):
    ```bash
    pip install -r requirements.txt
    ```
