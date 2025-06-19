@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ basho }}{% endblock %}
+
+{% block content %}
+<div class="card my-3">
+    <div class="card-body">
+        <h2 class="card-title">{{ basho }}</h2>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Slug: {{ basho.slug }}</li>
+            <li class="list-group-item">Year: {{ basho.year }}</li>
+            <li class="list-group-item">Month: {{ basho.month }}</li>
+            {% if basho.start_date %}
+            <li class="list-group-item">Start: {{ basho.start_date }}</li>
+            {% endif %}
+            {% if basho.end_date %}
+            <li class="list-group-item">End: {{ basho.end_date }}</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
