@@ -49,12 +49,17 @@ class RikishiOrderingTests(TestCase):
             name_jp="OE",
             rank=self.rank3,
         )
+        Rikishi.objects.create(
+            id=4,
+            name="No Rank",
+            name_jp="NR",
+        )
 
     def test_default_model_order(self):
         ids = list(Rikishi.objects.values_list("id", flat=True))
-        self.assertEqual(ids, [1, 2, 3])
+        self.assertEqual(ids, [1, 2, 3, 4])
 
     def test_list_view_ordering(self):
         response = self.client.get(reverse("rikishi-list"))
         ids = [rikishi.id for rikishi in response.context["object_list"]]
-        self.assertEqual(ids, [1, 2, 3])
+        self.assertEqual(ids, [1, 2, 3, 4])

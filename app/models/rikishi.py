@@ -61,7 +61,15 @@ class RikishiQuerySet(models.QuerySet):
             default=Value(99),
             output_field=IntegerField(),
         )
-        return self.annotate(rank_level=level_case).order_by(
+        missing_case = Case(
+            When(rank__isnull=True, then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+        return self.annotate(
+            rank_level=level_case, rank_missing=missing_case
+        ).order_by(
+            "rank_missing",
             "rank__division__level",
             "rank_level",
             "rank__order",
