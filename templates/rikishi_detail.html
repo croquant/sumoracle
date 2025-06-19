@@ -1,0 +1,13 @@
+{% block content %}
+    <h2>{{ rikishi.name }}</h2>
+    <p>Rank: {{ rikishi.rank }}</p>
+    <p>Heya: {{ rikishi.heya }}</p>
+    <p>Shusshin: {{ rikishi.shusshin }}</p>
+    <p>Height: {{ rikishi.height }} / Weight: {{ rikishi.weight }}</p>
+    <h3>Basho History</h3>
+    <ul>
+        {% for record in rikishi.ranking_history.all %}
+            <li>{{ record.basho.slug }} - {{ record.rank.long_name }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

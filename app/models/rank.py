@@ -35,6 +35,10 @@ class Rank(models.Model):
         editable=False,
     )
 
+    def __init__(self, *args, **kwargs):
+        self.level = kwargs.pop("level", None)
+        super().__init__(*args, **kwargs)
+
     @property
     def value(self):
         dir_val = (

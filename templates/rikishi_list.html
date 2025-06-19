@@ -15,7 +15,11 @@
         <tbody>
             {% for rikishi in object_list %}
                 <tr>
-                    <td>{{ rikishi.name }}</td>
+                    <td>
+                        <a href="{% url 'rikishi-detail' rikishi.id %}">
+                            {{ rikishi.name }}
+                        </a>
+                    </td>
                     <td>{{ rikishi.name_jp }}</td>
                 </tr>
             {% endfor %}
