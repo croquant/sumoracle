@@ -11,6 +11,32 @@
                 {% if active_only %}Show all{% else %}Show active{% endif %}
             </a>
         </p>
+
+        <form method="get" class="row g-2 mb-3">
+            <input type="hidden" name="active" value="1" {% if not active_only %}disabled{% endif %}>
+            <div class="col-md-4">
+                <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search name">
+            </div>
+            <div class="col-md-3">
+                <select name="heya" class="form-select">
+                    <option value="">All heya</option>
+                    {% for h in heyas %}
+                    <option value="{{ h.slug }}" {% if h.slug == selected_heya %}selected{% endif %}>{{ h.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="rank" class="form-select">
+                    <option value="">All ranks</option>
+                    {% for r in ranks %}
+                    <option value="{{ r.slug }}" {% if r.slug == selected_rank %}selected{% endif %}>{{ r.short_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
         <table id="rikishi-table" class="table table-striped table-hover">
             <thead>
                 <tr>
