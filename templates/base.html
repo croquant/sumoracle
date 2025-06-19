@@ -40,11 +40,23 @@
         {% block content %}{% endblock %}
     </main>
     <script>
+        const html = document.documentElement;
+        const storedTheme = localStorage.getItem("theme");
+        if (storedTheme === "light" || storedTheme === "dark") {
+            html.dataset.bsTheme = storedTheme;
+        } else if (
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+            html.dataset.bsTheme = "dark";
+        } else {
+            html.dataset.bsTheme = "light";
+        }
+
         const toggleButton = document.getElementById("theme-toggle");
         toggleButton.addEventListener("click", () => {
-            const html = document.documentElement;
             const mode = html.dataset.bsTheme === "dark" ? "light" : "dark";
             html.dataset.bsTheme = mode;
+            localStorage.setItem("theme", mode);
         });
     </script>
 </body>
