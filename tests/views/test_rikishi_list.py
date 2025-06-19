@@ -6,7 +6,7 @@ from django.urls import reverse
 from app.constants import Direction, RankName
 from app.models.division import Division
 from app.models.rank import Rank
-from app.models.rikishi import Heya, Rikishi
+from app.models.rikishi import Heya, Rikishi, Shusshin
 
 
 class RikishiListViewTests(TestCase):
@@ -31,12 +31,18 @@ class RikishiListViewTests(TestCase):
         self.heya1 = Heya.objects.create(name="Miyagino")
         self.heya2 = Heya.objects.create(name="Isegahama")
 
+        self.shusshin_jp = Shusshin.objects.create(name="Tokyo")
+        self.shusshin_mgl = Shusshin.objects.create(
+            name="Mongolia", international=True
+        )
+
         Rikishi.objects.create(
             id=1,
             name="Hakuho",
             name_jp="白鵬",
             heya=self.heya1,
             rank=self.rank1,
+            shusshin=self.shusshin_jp,
         )
         Rikishi.objects.create(
             id=2,
@@ -44,12 +50,14 @@ class RikishiListViewTests(TestCase):
             name_jp="鶴竜",
             heya=self.heya2,
             rank=self.rank2,
+            shusshin=self.shusshin_mgl,
         )
         Rikishi.objects.create(
             id=3,
             name="Chiyotaikai",
             name_jp="千代大海",
             heya=self.heya1,
+            shusshin=self.shusshin_jp,
             intai=date(2020, 1, 1),
         )
 
@@ -111,3 +119,10 @@ class RikishiListViewTests(TestCase):
         response = self.client.get(url)
         names = [r.name for r in response.context["object_list"]]
         self.assertEqual(names, ["Hakuho"])
+
+    def test_international_filter(self):
+        """Filtering for internationals returns only foreign wrestlers."""
+        url = reverse("rikishi-list") + "?international=1"
+        response = self.client.get(url)
+        names = [r.name for r in response.context["object_list"]]
+        self.assertEqual(names, ["Kakuryu"])

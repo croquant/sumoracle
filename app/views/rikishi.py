@@ -28,6 +28,8 @@ class RikishiListView(ListView):
             queryset = queryset.filter(heya__slug=heya)
         if rank := params.get("rank"):
             queryset = queryset.filter(rank__slug=rank)
+        if params.get("international") is not None:
+            queryset = queryset.filter(shusshin__international=True)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -42,6 +44,7 @@ class RikishiListView(ListView):
         context["query"] = params.get("q", "")
         context["selected_heya"] = params.get("heya", "")
         context["selected_rank"] = params.get("rank", "")
+        context["international_only"] = params.get("international") is not None
 
         params.pop("page", None)
         query_string = params.urlencode()
