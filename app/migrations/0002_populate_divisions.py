@@ -1,6 +1,6 @@
 from django.db import migrations
 
-from app.constants import DivisionEnum
+from libs.constants import DivisionEnum
 
 
 def populate_divisions(apps, schema_editor):

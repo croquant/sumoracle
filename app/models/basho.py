@@ -1,6 +1,6 @@
 from django.db import models
 
-from app.constants import BASHO_NAMES
+from libs.constants import BASHO_NAMES
 
 
 class Basho(models.Model):

@@ -4,11 +4,11 @@ import pycountry
 from asgiref.sync import sync_to_async
 from django.utils.text import slugify
 
-from app.constants import DIVISION_LEVELS
 from app.management.commands import AsyncBaseCommand
 from app.models.division import Division
 from app.models.rank import Rank
 from app.models.rikishi import Heya, Rikishi, Shusshin
+from libs.constants import DIVISION_LEVELS
 from libs.sumoapi import SumoApiClient
 
 

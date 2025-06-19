@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import Case, IntegerField, Value, When
 from django.utils.text import slugify
 
-from app.constants import RANKING_LEVELS
+from libs.constants import RANKING_LEVELS
 
 from .rank import Rank
 
