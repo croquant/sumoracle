@@ -1,0 +1,14 @@
+/* Custom retro sumo-inspired colors */
+body {
+    background-color: #f7f4e9;
+    color: #362c2a;
+}
+
+.navbar {
+    background-color: #d84a38;
+}
+
+.btn-primary {
+    background-color: #d84a38;
+    border-color: #362c2a;
+}
