@@ -6,14 +6,7 @@
 <div class="card my-3">
     <div class="card-body">
         <h2 class="card-title">Rikishi</h2>
-        <p>
-            <a href="{{ toggle_url }}">
-                {% if active_only %}Show all{% else %}Show active{% endif %}
-            </a>
-        </p>
-
-        <form method="get" class="row g-2 mb-3">
-            <input type="hidden" name="active" value="1" {% if not active_only %}disabled{% endif %}>
+        <form method="get" class="row g-2 align-items-end mb-3">
             <div class="col-md-4">
                 <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search name">
             </div>
@@ -32,6 +25,12 @@
                     <option value="{{ r.slug }}" {% if r.slug == selected_rank %}selected{% endif %}>{{ r.short_name }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="include-retired" name="include_retired" value="1" {% if not active_only %}checked{% endif %}>
+                    <label class="form-check-label" for="include-retired">Include retired</label>
+                </div>
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">Filter</button>

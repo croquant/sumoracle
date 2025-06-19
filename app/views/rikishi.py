@@ -18,7 +18,7 @@ class RikishiListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         params = self.request.GET
-        if params.get("active") is not None:
+        if params.get("include_retired") is None:
             queryset = queryset.filter(intai__isnull=True)
         if q := params.get("q"):
             queryset = queryset.filter(
@@ -33,10 +33,9 @@ class RikishiListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         params = self.request.GET.copy()
-        active = params.get("active") is not None
-        context["active_only"] = active
-        base = self.request.path
-        context["toggle_url"] = base if active else f"{base}?active=1"
+        include_retired = params.get("include_retired") is not None
+        active_only = not include_retired
+        context["active_only"] = active_only
 
         context["heyas"] = Heya.objects.all()
         context["ranks"] = Rank.objects.all()

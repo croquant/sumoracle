@@ -63,29 +63,30 @@ class RikishiListViewTests(TestCase):
         response = self.client.get(reverse("rikishi-list"))
         self.assertTemplateUsed(response, "rikishi_list.html")
 
-    def test_view_lists_all_rikishi(self):
-        """Paginator count should match the database."""
+    def test_view_lists_active_by_default(self):
+        """Only active rikishi should be listed without parameters."""
         response = self.client.get(reverse("rikishi-list"))
-        self.assertEqual(
-            response.context["paginator"].count,
-            Rikishi.objects.count(),
-        )
-
-    def test_active_filter(self):
-        """Filtering by active should exclude retired rikishi."""
-        url = reverse("rikishi-list") + "?active=1"
-        response = self.client.get(url)
-        names = [r.name for r in response.context["object_list"]]
-        self.assertNotIn("Chiyotaikai", names)
         self.assertEqual(
             response.context["paginator"].count,
             Rikishi.objects.filter(intai__isnull=True).count(),
         )
-        self.assertTrue(response.context["active_only"])
+        names = [r.name for r in response.context["object_list"]]
+        self.assertNotIn("Chiyotaikai", names)
+
+    def test_include_retired_filter(self):
+        """Including retired rikishi should list all wrestlers."""
+        url = reverse("rikishi-list") + "?include_retired=1"
+        response = self.client.get(url)
+        self.assertEqual(
+            response.context["paginator"].count,
+            Rikishi.objects.count(),
+        )
+        self.assertFalse(response.context["active_only"])
 
     def test_names_link_to_detail(self):
         """Each rikishi name should link to the detail view."""
-        response = self.client.get(reverse("rikishi-list"))
+        url = reverse("rikishi-list") + "?include_retired=1"
+        response = self.client.get(url)
         for rikishi in Rikishi.objects.all():
             detail_url = reverse("rikishi-detail", args=[rikishi.id])
             self.assertContains(response, f'href="{detail_url}"')
