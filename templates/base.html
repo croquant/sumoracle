@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="{% static 'css/halfmoon.elegant.css' %}">
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/htmx.min.js' %}"></script>
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <style>
+        #theme-toggle i { transition: transform 0.3s; }
+        #theme-toggle.flip i { transform: rotateY(180deg); }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="with-custom-webkit-scrollbars">
@@ -32,19 +40,46 @@
                         <a class="nav-link" href="{% url 'rikishi-list' %}">Rikishi</a>
                     </li>
                 </ul>
-                <button class="btn btn-sm btn-secondary" id="theme-toggle" type="button">Toggle theme</button>
+                <button class="btn btn-sm btn-secondary d-flex align-items-center" id="theme-toggle" type="button" aria-label="Toggle theme">
+                    <i id="icon-sun" class="bi bi-sun"></i>
+                    <i id="icon-moon" class="bi bi-moon d-none"></i>
+                </button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
     <main class="container">
         {% block content %}{% endblock %}
     </main>
     <script>
+        const html = document.documentElement;
+        const storedTheme = localStorage.getItem("theme");
+        if (storedTheme === "light" || storedTheme === "dark") {
+            html.dataset.bsTheme = storedTheme;
+        } else if (
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+            html.dataset.bsTheme = "dark";
+        } else {
+            html.dataset.bsTheme = "light";
+        }
+
         const toggleButton = document.getElementById("theme-toggle");
+        const iconSun = document.getElementById("icon-sun");
+        const iconMoon = document.getElementById("icon-moon");
+
+        function updateIcon() {
+            iconSun.classList.toggle("d-none", html.dataset.bsTheme !== "light");
+            iconMoon.classList.toggle("d-none", html.dataset.bsTheme !== "dark");
+        }
+
+        updateIcon();
+
         toggleButton.addEventListener("click", () => {
-            const html = document.documentElement;
             const mode = html.dataset.bsTheme === "dark" ? "light" : "dark";
             html.dataset.bsTheme = mode;
+            localStorage.setItem("theme", mode);
+            toggleButton.classList.toggle("flip");
+            updateIcon();
         });
     </script>
 </body>
