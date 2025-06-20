@@ -67,38 +67,42 @@ class RikishiApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         return response.json()
 
+    def get_names(self, data):
+        return [r["name"] for r in data["items"]]
+
     def test_list_active_only(self):
         data = self.get_json("/api/rikishi/")
-        names = [r["name"] for r in data]
-        self.assertEqual(names, ["Hakuho", "Kakuryu"])
+        self.assertEqual(self.get_names(data), ["Hakuho", "Kakuryu"])
 
     def test_include_retired(self):
         data = self.get_json("/api/rikishi/?include_retired=1")
-        names = [r["name"] for r in data]
+        names = self.get_names(data)
         self.assertIn("Chiyotaikai", names)
         self.assertEqual(len(names), 3)
 
     def test_query_filter(self):
         data = self.get_json("/api/rikishi/?q=Haku")
-        names = [r["name"] for r in data]
-        self.assertEqual(names, ["Hakuho"])
+        self.assertEqual(self.get_names(data), ["Hakuho"])
 
     def test_heya_filter(self):
         data = self.get_json(f"/api/rikishi/?heya={self.heya2.slug}")
-        names = [r["name"] for r in data]
-        self.assertEqual(names, ["Kakuryu"])
+        self.assertEqual(self.get_names(data), ["Kakuryu"])
 
     def test_division_filter(self):
         data = self.get_json(f"/api/rikishi/?division={self.makuuchi.name}")
-        names = [r["name"] for r in data]
-        self.assertEqual(names, ["Hakuho"])
+        self.assertEqual(self.get_names(data), ["Hakuho"])
 
     def test_international_filter(self):
         data = self.get_json("/api/rikishi/?international=1")
-        names = [r["name"] for r in data]
-        self.assertEqual(names, ["Kakuryu"])
+        self.assertEqual(self.get_names(data), ["Kakuryu"])
 
     def test_detail_endpoint(self):
         data = self.get_json("/api/rikishi/1/")
         self.assertEqual(data["id"], 1)
         self.assertEqual(data["name"], "Hakuho")
+
+    def test_limit_offset(self):
+        data = self.get_json("/api/rikishi/?limit=1&offset=1")
+        self.assertEqual(data["limit"], 1)
+        self.assertEqual(data["offset"], 1)
+        self.assertEqual(self.get_names(data), ["Kakuryu"])

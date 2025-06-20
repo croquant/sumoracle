@@ -1,16 +1,17 @@
-from typing import List, Optional
+from typing import Optional
 
 from django.db.models import Q
 from ninja import Router
 
 from app.models import Rikishi
-from app.schemas import RikishiSchema
+from app.schemas import Paginated, RikishiSchema
 from libs.api_utils import rikishi_to_schema
+from libs.pagination import LimitOffsetPaginator
 
 router = Router()
 
 
-@router.get("", response=List[RikishiSchema])
+@router.get("", response=Paginated[RikishiSchema])
 def rikishi_list(
     request,
     include_retired: Optional[bool] = None,
@@ -18,6 +19,8 @@ def rikishi_list(
     division: Optional[str] = None,
     heya: Optional[str] = None,
     international: Optional[bool] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ):
     """Return a filtered list of rikishi."""
 
@@ -35,7 +38,10 @@ def rikishi_list(
     if international is not None:
         queryset = queryset.filter(shusshin__international=True)
 
-    return [rikishi_to_schema(r) for r in queryset]
+    paginator = LimitOffsetPaginator()
+    data = paginator.paginate(queryset, limit, offset)
+    data["items"] = [rikishi_to_schema(r) for r in data["items"]]
+    return data
 
 
 @router.get("{rikishi_id}/", response=RikishiSchema)
