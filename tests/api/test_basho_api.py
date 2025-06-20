@@ -15,13 +15,20 @@ class BashoApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         return response.json()
 
+    def get_slugs(self, data):
+        return [b["slug"] for b in data["items"]]
+
     def test_list_endpoint(self):
         data = self.get_json("/api/basho/")
-        slugs = [b["slug"] for b in data]
-        self.assertEqual(slugs, [self.b2.slug, self.b1.slug])
+        self.assertEqual(self.get_slugs(data), [self.b2.slug, self.b1.slug])
 
     def test_detail_endpoint(self):
         data = self.get_json(f"/api/basho/{self.b1.slug}/")
         self.assertEqual(data["slug"], self.b1.slug)
         self.assertEqual(data["year"], 2025)
         self.assertEqual(data["month"], 1)
+
+    def test_limit_offset(self):
+        data = self.get_json("/api/basho/?limit=1&offset=1")
+        self.assertEqual(data["limit"], 1)
+        self.assertEqual(self.get_slugs(data), [self.b1.slug])

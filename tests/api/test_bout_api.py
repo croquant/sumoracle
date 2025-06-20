@@ -46,25 +46,39 @@ class BoutApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         return response.json()
 
+    def get_items(self, data):
+        return data["items"]
+
     def test_list_all(self):
         data = self.get_json(f"/api/basho/{self.basho.slug}/bouts/")
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(self.get_items(data)), 2)
 
     def test_division_filter(self):
         data = self.get_json(
             f"/api/basho/{self.basho.slug}/bouts/?division={self.div_m.name}"
         )
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["division"], "Makuuchi")
+        items = self.get_items(data)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["division"], "Makuuchi")
 
     def test_day_filter(self):
         data = self.get_json(f"/api/basho/{self.basho.slug}/bouts/?day=2")
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["day"], 2)
+        items = self.get_items(data)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["day"], 2)
 
     def test_rikishi_filter(self):
         data = self.get_json(
             f"/api/basho/{self.basho.slug}/bouts/?rikishi_id=1"
         )
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["east"], "A")
+        items = self.get_items(data)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["east"], "A")
+
+    def test_limit_offset(self):
+        data = self.get_json(
+            f"/api/basho/{self.basho.slug}/bouts/?limit=1&offset=1"
+        )
+        items = self.get_items(data)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]["division"], "Juryo")
