@@ -213,7 +213,7 @@ class Command(AsyncBaseCommand):
         division = division_cache.get(parts[0]) or division_cache.get(
             "Makuuchi"
         )
-        print(rank_string, parts, division)
+
         if len(parts) == 3:
             rank, _ = await Rank.objects.aget_or_create(
                 slug=slug,
