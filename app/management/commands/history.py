@@ -8,6 +8,7 @@ from django.utils.text import slugify
 
 from app.management.commands import AsyncBaseCommand
 from app.models.basho import Basho
+from app.models.division import Division
 from app.models.history import BashoHistory
 from app.models.rank import Rank
 from app.models.rikishi import Rikishi
@@ -64,6 +65,11 @@ def get_existing_keys():
     return set(BashoHistory.objects.values_list("rikishi_id", "basho__slug"))
 
 
+@sync_to_async
+def get_existing_divisions():
+    return {d.name: d for d in Division.objects.all()}
+
+
 class Command(AsyncBaseCommand):
     help = "Populate rikishi history (async)"
 
@@ -77,6 +83,7 @@ class Command(AsyncBaseCommand):
             existing_basho = await get_existing_basho()
             existing_rank = await get_existing_rank()
             existing_keys = await get_existing_keys()
+            existing_divisions = await get_existing_divisions()
             shikona_cache = {}
             measurement_cache = {}
 
@@ -149,7 +156,7 @@ class Command(AsyncBaseCommand):
                         basho = existing_basho[basho_slug]
 
                     rank = await self.get_or_create_rank(
-                        rank_str, existing_rank
+                        rank_str, existing_rank, existing_divisions
                     )
 
                     shikona_data = pick_shikona(
@@ -197,22 +204,36 @@ class Command(AsyncBaseCommand):
             ),
         )
 
-    async def get_or_create_rank(self, rank_string, rank_cache):
+    async def get_or_create_rank(self, rank_string, rank_cache, division_cache):
         slug = slugify(rank_string)
         if slug in rank_cache:
             return rank_cache[slug]
 
         parts = rank_string.split(" ")
+        division = division_cache.get(parts[0]) or division_cache.get(
+            "Makuuchi"
+        )
+        print(rank_string, parts, division)
         if len(parts) == 3:
             rank, _ = await Rank.objects.aget_or_create(
-                title=parts[0], order=parts[1], direction=parts[2]
+                slug=slug,
+                title=parts[0],
+                order=parts[1],
+                direction=parts[2],
+                division=division,
             )
         elif len(parts) == 2:
             rank, _ = await Rank.objects.aget_or_create(
-                title=parts[0], order=parts[1], direction="West"
+                slug=slugify(f"{rank_string} West"),
+                title=parts[0],
+                order=parts[1],
+                direction="West",
+                division=division,
             )
         else:
-            rank, _ = await Rank.objects.aget_or_create(title=parts[0])
+            rank, _ = await Rank.objects.aget_or_create(
+                slug=slug, title=parts[0], division=division
+            )
 
         rank_cache[slug] = rank
         return rank
