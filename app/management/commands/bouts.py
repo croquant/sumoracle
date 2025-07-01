@@ -45,6 +45,13 @@ class Command(AsyncBaseCommand):
 
         records = data.get("records", [])
         bouts = []
+        if not records:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"No bouts found for rikishi ID {rikishi_id}"
+                )
+            )
+            return bouts
         for entry in records:
             basho_slug = entry.get("bashoId")
             basho, _ = await Basho.objects.aget_or_create(
