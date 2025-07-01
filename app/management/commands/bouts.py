@@ -10,16 +10,23 @@ class Command(AsyncBaseCommand):
         parser.add_argument("rikishi_id", nargs="?", type=int)
         parser.add_argument("--basho", dest="basho_id")
 
+    async def rikishi_id_iter(self, rikishi_id=None):
+        """Yield one or more rikishi IDs."""
+
+        if rikishi_id:
+            yield rikishi_id
+            return
+
+        async for rid in Rikishi.objects.values_list(
+            "id", flat=True
+        ).aiterator():
+            yield rid
+
     async def run(self, rikishi_id=None, basho_id=None, **options):
         async with SumoApiClient() as api:
-            rikishi_ids = (
-                [rikishi_id]
-                if rikishi_id
-                else list(await Rikishi.objects.values_list("id", flat=True))
-            )
             params = {"bashoId": basho_id} if basho_id else {}
             total = 0
-            for rid in rikishi_ids:
+            async for rid in self.rikishi_id_iter(rikishi_id):
                 data = await api.get_rikishi_matches(rid, **params)
                 records = data.get("records", [])
                 total += len(records)
