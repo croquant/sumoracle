@@ -39,9 +39,11 @@ class Shusshin(models.Model):
 
     def flag(self):
         if self.international:
-            return pycountry.countries.lookup(self.name).flag
-        else:
-            return "🇯🇵"
+            try:
+                return pycountry.countries.lookup(self.name).flag
+            except LookupError:
+                return "🏳️"
+        return "🇯🇵"
 
     def __str__(self):
         return f"{self.flag()}{self.name}"
