@@ -4,7 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 from django.test import SimpleTestCase
 
-from app.management.commands.bouts import Command
+from app.management.commands.bouts import (
+    Command,
+    get_division_map,
+    get_rikishi_map,
+)
+from app.models import Basho, Division, Rikishi
 from libs.sumoapi import SumoApiError
 
 
@@ -30,25 +35,26 @@ class BoutsCommandTests(SimpleTestCase):
         }
 
     def setup_patches(self):
-        east = SimpleNamespace(id=10)
-        west = SimpleNamespace(id=11)
-        winner = east
+        east = Rikishi(id=10)
+        west = Rikishi(id=11)
         patches = (
             patch("app.management.commands.bouts.SumoApiClient"),
             patch(
                 "app.management.commands.bouts.Basho.objects.aget_or_create",
-                new=AsyncMock(return_value=(SimpleNamespace(), True)),
+                new=AsyncMock(return_value=(Basho(slug="202501"), True)),
             ),
             patch(
-                "app.management.commands.bouts.Division.objects.aget",
-                new=AsyncMock(return_value=SimpleNamespace()),
+                "app.management.commands.bouts.get_rikishi_map",
+                new=AsyncMock(return_value={10: east, 11: west}),
             ),
             patch(
-                "app.management.commands.bouts.Rikishi.objects.aget",
-                new=AsyncMock(side_effect=[east, west, winner]),
+                "app.management.commands.bouts.get_division_map",
+                new=AsyncMock(
+                    return_value={"Makuuchi": Division(name="Makuuchi")}
+                ),
             ),
             patch(
-                "app.management.commands.bouts.Bout.objects.aupdate_or_create",
+                "app.management.commands.bouts.Bout.objects.abulk_create",
                 new=AsyncMock(),
             ),
         )
@@ -74,10 +80,10 @@ class BoutsCommandTests(SimpleTestCase):
             cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
             self.run_async(cmd.run(1, None))
             create_mock.assert_awaited_once()
-            kwargs = create_mock.call_args.kwargs
-            self.assertEqual(kwargs["defaults"]["kimarite"], "yorikiri")
-            self.assertEqual(kwargs["day"], 1)
-            self.assertEqual(kwargs["match_no"], 1)
+            bout = create_mock.call_args.args[0][0]
+            self.assertEqual(bout.kimarite, "yorikiri")
+            self.assertEqual(bout.day, 1)
+            self.assertEqual(bout.match_no, 1)
 
     def test_basho_option_passed_to_api(self):
         """Passing ``--basho`` should filter API requests."""
@@ -122,6 +128,28 @@ class BoutsCommandTests(SimpleTestCase):
             create_mock.assert_not_awaited()
             self.assertIn("Imported 0 bouts", output[-1])
 
+    def test_none_records_no_save(self):
+        """``None`` records should be treated as empty."""
+        patches = self.setup_patches()
+        with (
+            patches[0] as client_cls,
+            patches[1],
+            patches[2],
+            patches[3],
+            patches[4] as create_mock,
+        ):
+            api = AsyncMock()
+            client_cls.return_value.__aenter__.return_value = api
+            client_cls.return_value.__aexit__.return_value = None
+            api.get_rikishi_matches.return_value = {"records": None}
+            output = []
+            cmd = Command()
+            cmd.stdout = SimpleNamespace(write=lambda msg: output.append(msg))
+            cmd.style = SimpleNamespace(SUCCESS=lambda m: m)
+            self.run_async(cmd.run(1, None))
+            create_mock.assert_not_awaited()
+            self.assertIn("Imported 0 bouts", output[-1])
+
     def test_handle_api_error(self):
         """Handle should report API failures."""
         cmd = Command()
@@ -154,3 +182,28 @@ class BoutsCommandTests(SimpleTestCase):
         args = parser.parse_args(["10", "--basho", "202501"])
         self.assertEqual(args.rikishi_id, 10)
         self.assertEqual(args.basho_id, "202501")
+
+
+class BoutsHelperTests(SimpleTestCase):
+    """Tests for helper lookup functions."""
+
+    def run_async(self, coro):
+        return asyncio.get_event_loop().run_until_complete(coro)
+
+    def test_lookup_helpers(self):
+        with (
+            patch("app.management.commands.bouts.Rikishi.objects") as ro,
+            patch("app.management.commands.bouts.Division.objects") as do,
+        ):
+            rikishi = Rikishi(id=1)
+            division = Division(name="Juryo")
+            ro.only.return_value = [rikishi]
+            do.all.return_value = [division]
+            self.assertEqual(
+                self.run_async(get_rikishi_map()),
+                {1: rikishi},
+            )
+            self.assertEqual(
+                self.run_async(get_division_map()),
+                {"Juryo": division},
+            )
