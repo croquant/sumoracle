@@ -74,6 +74,10 @@ class ModelUtilityTests(SimpleTestCase):
             self.assertEqual(shusshin.flag(), "🇺🇸")  # Uses lookup flag
             self.assertTrue(str(shusshin).startswith("🇺"))
 
+        with patch("pycountry.countries.lookup") as lookup:
+            lookup.side_effect = LookupError
+            self.assertEqual(shusshin.flag(), "🏳️")
+
         rikishi = Rikishi(name="Hakuho", name_jp="白鵬")
         self.assertEqual(str(rikishi), "Hakuho")  # __str__ uses name
 
