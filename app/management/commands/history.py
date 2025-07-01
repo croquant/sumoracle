@@ -130,57 +130,59 @@ class Command(AsyncBaseCommand):
                             rec.get("bashoId"): rec for rec in data
                         }
 
-            for rikishi in batch:
-                history = ranking_histories.get(rikishi.id, [])
-                for entry in history:
-                    basho_slug = entry.get("bashoId")
-                    rank_str = entry.get("rank")
-                    if (
-                        not basho_slug
-                        or not rank_str
-                        or (rikishi.id, basho_slug) in existing_keys
-                    ):
-                        continue
-
-                    if basho_slug not in existing_basho:
-                        if int(basho_slug) < 195803:
-                            self.log(f"Skipping old basho {basho_slug}")
+                for rikishi in batch:
+                    history = ranking_histories.get(rikishi.id, [])
+                    for entry in history:
+                        basho_slug = entry.get("bashoId")
+                        rank_str = entry.get("rank")
+                        if (
+                            not basho_slug
+                            or not rank_str
+                            or (rikishi.id, basho_slug) in existing_keys
+                        ):
                             continue
-                        basho_data = await api.get_basho_by_id(basho_slug)
-                        if not basho_data:
-                            self.log(f"Missing basho {basho_slug}, skipping")
-                            continue
-                        basho = await self.create_basho_from_api(basho_data)
-                        existing_basho[basho.slug] = basho
-                    else:
-                        basho = existing_basho[basho_slug]
 
-                    rank = await self.get_or_create_rank(
-                        rank_str, existing_rank, existing_divisions
-                    )
+                        if basho_slug not in existing_basho:
+                            if int(basho_slug) < 195803:
+                                self.log(f"Skipping old basho {basho_slug}")
+                                continue
+                            basho_data = await api.get_basho_by_id(basho_slug)
+                            if not basho_data:
+                                self.log(
+                                    f"Missing basho {basho_slug}, skipping"
+                                )
+                                continue
+                            basho = await self.create_basho_from_api(basho_data)
+                            existing_basho[basho.slug] = basho
+                        else:
+                            basho = existing_basho[basho_slug]
 
-                    shikona_data = pick_shikona(
-                        shikona_cache.get(rikishi.id, {}), basho_slug
-                    )
-                    measurement_data = pick_measurements(
-                        measurement_cache.get(rikishi.id, {}), basho_slug
-                    )
-                    ranking_history_to_create.append(
-                        BashoHistory(
-                            rikishi=rikishi,
-                            basho=basho,
-                            rank=rank,
-                            shikona_en=shikona_data.get("shikonaEn", ""),
-                            shikona_jp=shikona_data.get("shikonaJp", ""),
-                            height=measurement_data.get("height"),
-                            weight=measurement_data.get("weight"),
+                        rank = await self.get_or_create_rank(
+                            rank_str, existing_rank, existing_divisions
                         )
-                    )
 
-                if len(ranking_history_to_create) >= 1000:
-                    await self.bulk_save(ranking_history_to_create)
-                    ranking_history_to_create.clear()
-                    existing_keys = await get_existing_keys()
+                        shikona_data = pick_shikona(
+                            shikona_cache.get(rikishi.id, {}), basho_slug
+                        )
+                        measurement_data = pick_measurements(
+                            measurement_cache.get(rikishi.id, {}), basho_slug
+                        )
+                        ranking_history_to_create.append(
+                            BashoHistory(
+                                rikishi=rikishi,
+                                basho=basho,
+                                rank=rank,
+                                shikona_en=shikona_data.get("shikonaEn", ""),
+                                shikona_jp=shikona_data.get("shikonaJp", ""),
+                                height=measurement_data.get("height"),
+                                weight=measurement_data.get("weight"),
+                            )
+                        )
+
+                        if len(ranking_history_to_create) >= 1000:
+                            await self.bulk_save(ranking_history_to_create)
+                            ranking_history_to_create.clear()
+                            existing_keys = await get_existing_keys()
 
             if ranking_history_to_create:
                 await self.bulk_save(ranking_history_to_create)
