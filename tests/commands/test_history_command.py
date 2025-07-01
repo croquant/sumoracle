@@ -98,6 +98,10 @@ class HistoryCommandTests(SimpleTestCase):
                 new=async_mock(return_value=set()),
             ),
             patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
+            ),
+            patch(
                 "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
@@ -158,6 +162,10 @@ class HistoryCommandTests(SimpleTestCase):
                 new=async_mock(return_value=set()),
             ),
             patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
+            ),
+            patch(
                 "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
@@ -214,6 +222,10 @@ class HistoryCommandTests(SimpleTestCase):
                 new=async_mock(return_value=set()),
             ),
             patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
+            ),
+            patch(
                 "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
@@ -268,6 +280,10 @@ class HistoryCommandTests(SimpleTestCase):
             patch(
                 "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
+            ),
+            patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
             ),
             patch(
                 "app.management.commands.history.Rank.objects.aget_or_create",
@@ -327,6 +343,10 @@ class HistoryCommandTests(SimpleTestCase):
                 new=async_mock(return_value=set()),
             ),
             patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
+            ),
+            patch(
                 "app.management.commands.history.Rank.objects.aget_or_create",
                 new=async_mock(return_value=(rank, True)),
             ),
@@ -382,6 +402,10 @@ class HistoryCommandTests(SimpleTestCase):
             patch(
                 "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value=set()),
+            ),
+            patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
             ),
             patch(
                 "app.management.commands.history.Rank.objects.aget_or_create",
@@ -464,15 +488,24 @@ class HistoryCommandTests(SimpleTestCase):
         """Rank caching should prevent duplicate queries."""
         cmd = Command()
         cache = {}
+        div_cache = {"Makuuchi": SimpleNamespace(name="Makuuchi")}
         rank_obj = SimpleNamespace()
         with patch(
             "app.management.commands.history.Rank.objects.aget_or_create",
             new=AsyncMock(return_value=(rank_obj, True)),
         ) as create_mock:
-            self.run_async(cmd.get_or_create_rank("Yokozuna 1 East", cache))
-            self.run_async(cmd.get_or_create_rank("Yokozuna 1 East", cache))
-            self.run_async(cmd.get_or_create_rank("Sekiwake 1", cache))
-            self.run_async(cmd.get_or_create_rank("Jonokuchi", cache))
+            self.run_async(
+                cmd.get_or_create_rank("Yokozuna 1 East", cache, div_cache)
+            )
+            self.run_async(
+                cmd.get_or_create_rank("Yokozuna 1 East", cache, div_cache)
+            )
+            self.run_async(
+                cmd.get_or_create_rank("Sekiwake 1", cache, div_cache)
+            )
+            self.run_async(
+                cmd.get_or_create_rank("Jonokuchi", cache, div_cache)
+            )
         self.assertEqual(create_mock.call_count, 3)
 
     def test_create_basho_from_api(self):
@@ -519,6 +552,10 @@ class HistoryCommandTests(SimpleTestCase):
             patch(
                 "app.management.commands.history.get_existing_keys",
                 new=async_mock(return_value={(1, "202503")}),
+            ),
+            patch(
+                "app.management.commands.history.get_existing_divisions",
+                new=async_mock(return_value={}),
             ),
             patch(
                 "app.management.commands.history.SumoApiClient"
