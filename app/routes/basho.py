@@ -1,21 +1,29 @@
-from typing import List, Optional
+from typing import Optional
 
 from django.db.models import Q
 from ninja import Router
 
 from app.models import Basho, Bout
-from app.schemas import BashoSchema, BoutSchema
+from app.schemas import BashoSchema, BoutSchema, Paginated
 from libs.api_utils import basho_to_schema, bout_to_schema
+from libs.pagination import LimitOffsetPaginator
 
 router = Router()
 
 
-@router.get("", response=List[BashoSchema])
-def basho_list(request):
+@router.get("", response=Paginated[BashoSchema])
+def basho_list(
+    request,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+):
     """Return a list of basho ordered by most recent."""
 
     queryset = Basho.objects.all().order_by("-year", "-month")
-    return [basho_to_schema(b) for b in queryset]
+    paginator = LimitOffsetPaginator()
+    data = paginator.paginate(queryset, limit, offset)
+    data["items"] = [basho_to_schema(b) for b in data["items"]]
+    return data
 
 
 @router.get("{slug}/", response=BashoSchema)
@@ -26,13 +34,15 @@ def basho_detail(request, slug: str):
     return basho_to_schema(basho)
 
 
-@router.get("{slug}/bouts/", response=List[BoutSchema])
+@router.get("{slug}/bouts/", response=Paginated[BoutSchema])
 def basho_bouts(
     request,
     slug: str,
     division: Optional[str] = None,
     day: Optional[int] = None,
     rikishi_id: Optional[int] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ):
     """Return bouts for a basho with optional filters."""
 
@@ -45,4 +55,7 @@ def basho_bouts(
         queryset = queryset.filter(
             Q(east__id=rikishi_id) | Q(west__id=rikishi_id)
         )
-    return [bout_to_schema(b) for b in queryset]
+    paginator = LimitOffsetPaginator()
+    data = paginator.paginate(queryset, limit, offset)
+    data["items"] = [bout_to_schema(b) for b in data["items"]]
+    return data
