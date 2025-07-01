@@ -21,7 +21,12 @@ def rikishi_list(
 ):
     """Return a filtered list of rikishi."""
 
-    queryset = Rikishi.objects.all()
+    queryset = Rikishi.objects.select_related(
+        "rank__division",
+        "heya",
+        "shusshin",
+        "rank",
+    )
     if include_retired is None:
         queryset = queryset.filter(intai__isnull=True)
     if q:

@@ -16,7 +16,11 @@ class RikishiListView(ListView):
         return [self.template_name]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("rank__division", "heya", "shusshin", "rank")
+        )
         params = self.request.GET
         if params.get("include_retired") is None:
             queryset = queryset.filter(intai__isnull=True)
