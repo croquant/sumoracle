@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from ninja import Router
 
 from app.models import Rikishi
@@ -42,5 +43,5 @@ def rikishi_list(
 def rikishi_detail(request, rikishi_id: int):
     """Return details for a single rikishi."""
 
-    rikishi = Rikishi.objects.get(pk=rikishi_id)
+    rikishi = get_object_or_404(Rikishi, pk=rikishi_id)
     return rikishi_to_schema(rikishi)

@@ -102,3 +102,7 @@ class RikishiApiTests(TestCase):
         data = self.get_json("/api/rikishi/1/")
         self.assertEqual(data["id"], 1)
         self.assertEqual(data["name"], "Hakuho")
+
+    def test_detail_not_found(self):
+        response = self.client.get("/api/rikishi/99/")
+        self.assertEqual(response.status_code, 404)
