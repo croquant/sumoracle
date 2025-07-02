@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-bs-core="elegant" data-bs-theme="auto">
+<html lang="en" data-bs-core="elegant">
 <head>
     <meta charset="utf-8">
     <title>{% block title %}Sumoracle{% endblock %}</title>
@@ -36,60 +36,21 @@
                         <a class="nav-link" href="{% url 'rikishi-list' %}">Rikishi</a>
                     </li>
                 </ul>
-                <div class="dropdown">
-                    <button
-                        class="btn btn-sm btn-secondary dropdown-toggle"
-                        id="bd-theme"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        data-bs-display="static"
-                        aria-expanded="false"
-                        aria-label="Toggle theme"
-                    >
-                        <i class="bi bi-circle-half theme-icon-active"></i>
-                    </button>
-                    <ul
-                        class="dropdown-menu dropdown-menu-end"
-                        aria-labelledby="bd-theme"
-                    >
-                        <li>
-                            <button
-                                type="button"
-                                class="dropdown-item d-flex align-items-center"
-                                data-bs-theme-value="light"
-                            >
-                                <i class="bi bi-sun me-2"></i>
-                                Light
-                            </button>
-                        </li>
-                        <li>
-                            <button
-                                type="button"
-                                class="dropdown-item d-flex align-items-center"
-                                data-bs-theme-value="dark"
-                            >
-                                <i class="bi bi-moon me-2"></i>
-                                Dark
-                            </button>
-                        </li>
-                        <li>
-                            <button
-                                type="button"
-                                class="dropdown-item d-flex align-items-center active"
-                                data-bs-theme-value="auto"
-                            >
-                                <i class="bi bi-circle-half me-2"></i>
-                                Auto
-                            </button>
-                        </li>
-                    </ul>
-                </div>
+                <button
+                    id="theme-toggle"
+                    class="btn btn-sm btn-secondary"
+                    type="button"
+                    aria-label="Toggle dark mode"
+                    onclick="toggleDarkMode()"
+                >
+                    <i class="bi bi-circle-half"></i>
+                </button>
                 </div>
             </div>
         </nav>
     <main class="container">
         {% block content %}{% endblock %}
     </main>
-    <script src="{% static 'js/color-modes.js' %}"></script>
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
 </body>
 </html>
