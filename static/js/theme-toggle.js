@@ -1,12 +1,37 @@
 (() => {
-    const storedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    document.documentElement.dataset.bsTheme = storedTheme || systemTheme;
+    const html = document.documentElement;
+    let mode = localStorage.getItem('theme') || 'auto';
 
-    window.toggleDarkMode = () => {
-        const current = document.documentElement.dataset.bsTheme;
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.bsTheme = next;
-        localStorage.setItem('theme', next);
+    function applyTheme() {
+        const system = window.matchMedia(
+            '(prefers-color-scheme: dark)'
+        ).matches
+            ? 'dark'
+            : 'light';
+        html.dataset.bsTheme = mode === 'auto' ? system : mode;
+    }
+
+    const icon = document.querySelector('#theme-toggle i');
+
+    function updateIcon() {
+        icon.classList.toggle('bi-circle-half', mode === 'auto');
+        icon.classList.toggle('bi-moon', mode === 'dark');
+        icon.classList.toggle('bi-sun', mode === 'light');
+    }
+
+    window.toggleTheme = () => {
+        if (mode === 'auto') {
+            mode = 'dark';
+        } else if (mode === 'dark') {
+            mode = 'light';
+        } else {
+            mode = 'auto';
+        }
+        localStorage.setItem('theme', mode);
+        applyTheme();
+        updateIcon();
     };
+
+    applyTheme();
+    updateIcon();
 })();
