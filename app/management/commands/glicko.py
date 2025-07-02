@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from app.models import Basho, BashoHistory, Bout
+from app.models import Basho, BashoHistory, BashoRating, Bout
 from libs.glicko2 import Player
 
 
@@ -41,8 +41,20 @@ class Command(BaseCommand):
                 if rikishi_id not in results:
                     players.setdefault(rikishi_id, Player()).did_not_compete()
 
-            for rikishi_id, history in histories.items():
-                history.glicko = players[rikishi_id].rating
+            ratings = []
+            for rikishi_id in histories:
+                player = players[rikishi_id]
+                ratings.append(
+                    BashoRating(
+                        rikishi_id=rikishi_id,
+                        basho=basho,
+                        rating=player.rating,
+                        rd=player.rd,
+                        vol=player.vol,
+                    )
+                )
 
-            if histories:
-                BashoHistory.objects.bulk_update(histories.values(), ["glicko"])
+            if ratings:
+                BashoRating.objects.bulk_create(
+                    ratings, batch_size=500, ignore_conflicts=True
+                )

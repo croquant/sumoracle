@@ -87,6 +87,7 @@ class ModelUtilityTests(SimpleTestCase):
         from app.models import history as mod
 
         self.assertTrue(hasattr(mod, "BashoHistory"))
+        self.assertTrue(hasattr(models, "BashoRating"))
 
     def test_bout_str(self):
         """``Bout.__str__`` includes the basho slug."""

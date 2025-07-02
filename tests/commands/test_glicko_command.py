@@ -1,7 +1,15 @@
 from django.core.management import call_command
 from django.test import TestCase
 
-from app.models import Basho, BashoHistory, Bout, Division, Rank, Rikishi
+from app.models import (
+    Basho,
+    BashoHistory,
+    BashoRating,
+    Bout,
+    Division,
+    Rank,
+    Rikishi,
+)
 
 
 class GlickoCommandTests(TestCase):
@@ -54,10 +62,10 @@ class GlickoCommandTests(TestCase):
 
     def test_ratings_are_computed(self):
         call_command("glicko")
-        h1_r1 = BashoHistory.objects.get(rikishi=self.r1, basho=self.b1)
-        h1_r2 = BashoHistory.objects.get(rikishi=self.r2, basho=self.b1)
-        h2_r1 = BashoHistory.objects.get(rikishi=self.r1, basho=self.b2)
-        h2_r2 = BashoHistory.objects.get(rikishi=self.r2, basho=self.b2)
-        self.assertGreater(h1_r1.glicko, h1_r2.glicko)
-        self.assertAlmostEqual(h2_r1.glicko, h1_r1.glicko, places=5)
-        self.assertAlmostEqual(h2_r2.glicko, h1_r2.glicko, places=5)
+        r1_b1 = BashoRating.objects.get(rikishi=self.r1, basho=self.b1)
+        r2_b1 = BashoRating.objects.get(rikishi=self.r2, basho=self.b1)
+        r1_b2 = BashoRating.objects.get(rikishi=self.r1, basho=self.b2)
+        r2_b2 = BashoRating.objects.get(rikishi=self.r2, basho=self.b2)
+        self.assertGreater(r1_b1.rating, r2_b1.rating)
+        self.assertAlmostEqual(r1_b2.rating, r1_b1.rating, places=5)
+        self.assertAlmostEqual(r2_b2.rating, r2_b1.rating, places=5)
