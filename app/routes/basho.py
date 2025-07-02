@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from ninja import Router
 
 from app.models import Basho, Bout
@@ -22,7 +23,7 @@ def basho_list(request):
 def basho_detail(request, slug: str):
     """Return details for a single basho."""
 
-    basho = Basho.objects.get(slug=slug)
+    basho = get_object_or_404(Basho, slug=slug)
     return basho_to_schema(basho)
 
 

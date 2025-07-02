@@ -1,5 +1,6 @@
 from typing import List
 
+from django.shortcuts import get_object_or_404
 from ninja import Router
 
 from app.models import Division
@@ -21,5 +22,5 @@ def division_list(request):
 def division_detail(request, slug: str):
     """Return details for a single division."""
 
-    division = Division.objects.get(name__iexact=slug)
+    division = get_object_or_404(Division, name__iexact=slug)
     return division_to_schema(division)

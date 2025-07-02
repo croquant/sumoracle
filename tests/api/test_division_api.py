@@ -22,3 +22,7 @@ class DivisionApiTests(TestCase):
         self.assertEqual(data["name"], "Makuuchi")
         self.assertEqual(data["name_short"], "M")
         self.assertEqual(data["level"], 1)
+
+    def test_detail_not_found(self):
+        response = self.client.get("/api/division/unknown/")
+        self.assertEqual(response.status_code, 404)

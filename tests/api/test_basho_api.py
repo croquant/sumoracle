@@ -25,3 +25,7 @@ class BashoApiTests(TestCase):
         self.assertEqual(data["slug"], self.b1.slug)
         self.assertEqual(data["year"], 2025)
         self.assertEqual(data["month"], 1)
+
+    def test_detail_not_found(self):
+        response = self.client.get("/api/basho/209901/")
+        self.assertEqual(response.status_code, 404)
