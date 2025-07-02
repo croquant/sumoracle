@@ -1,58 +1,55 @@
-# Mission
-Fix or extend the codebase without breaking the axioms.
+# Sumoracle Contributor Guide
 
-## Overview
-- Django project (Python >=3.12)
-- Async commands + HTTP client in `libs/sumoapi.py`
-- Tests in `tests/`
-- Formatting via Ruff and isort
+Welcome to the Sumoracle codebase. This is a Django 5.2 project that uses
+Python 3.12 and relies heavily on asynchronous management commands and an
+async HTTP client.
 
-## CLI First
-Use shell tools (`ls`, `tree`, `rg`, `awk`, `curl`). Automate with `scripts/*.sh` when useful.
+## Project Overview
+- `app/` – Django app with models, views and Ninja API routes
+- `app/management/commands/` – async commands run via `manage.py`
+- `libs/` – helper libraries including `sumoapi.py` (async client)
+- `tests/` – unit tests covering the API, models and commands
+- Docker files are provided for local development
 
-## Quick Explore (run before planning)
+## Quick Explore
+Run these commands before planning any changes:
 ```bash
 ls -1
-tree -L 2 | head -n 40
+find . -maxdepth 2 | head -n 40
 rg -i "^(def main|class .*Config)" -g '*.py'
 rg -i '(test_)\w+' tests/
 ```
-Identify entry points (`manage.py`, `config/settings.py`), models and commands.
+Identify entry points such as `manage.py` and `config/settings.py` as well
+as key models and commands.
 
-## Canonical Truth
-Code beats docs. Update docs or open an issue if they diverge.
+## Development Workflow
+1. **Format & Lint**
+   ```bash
+   ruff check .
+   isort .
+   ruff --fix .
+   ruff format .
+   ```
+2. **Run Tests** (coverage must remain above 95%)
+   ```bash
+   coverage run manage.py test
+   coverage report -m
+   ```
+3. *(Optional)* **Pre‑commit**
+   ```bash
+   pre-commit install
+   pre-commit run --all-files
+   ```
+4. **Commit** – keep commits focused and descriptive.
 
-## Workflow
-### Format & Lint
-```bash
-ruff check .
-isort .
-ruff --fix .
-ruff format .
-```
-### Tests
-```bash
-coverage run manage.py test
-coverage report -m
-```
-Must reach 95% coverage (`fail_under` in `pyproject.toml`).
-### Pre-commit (if installed)
-```bash
-pre-commit install
-pre-commit run --all-files
-```
-### Commit
-Keep changes focused with clear messages.
+Follow the loop: EXPLORE → PLAN → ACT → OBSERVE → REFLECT → COMMIT. Code is
+authoritative; update documentation when behaviour changes.
 
-## Loop
-EXPLORE → PLAN → ACT → OBSERVE → REFLECT → COMMIT. Keep tests green.
+## Style Guidelines
+- Maximum line length is 80 characters
+- Prefer `async`/`await` for new code
 
-## Style
-- 80 char lines (`ruff.toml`)
-- Prefer async/await
+## Pull Request
+- Title format: `[sumoracle] <Title>`
+- Ensure tests and linting pass before opening the PR
 
-## Layout
-- `app/models/` – Django models
-- `app/management/commands/` – async commands
-- `libs/sumoapi.py` – API client
-- `tests/` – unit tests
