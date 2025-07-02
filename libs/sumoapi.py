@@ -1,3 +1,5 @@
+"""Async wrappers around the public `sumo-api.com` endpoints."""
+
 import asyncio
 import os
 
@@ -33,9 +35,11 @@ class SumoApiClient:
         self.client = httpx.AsyncClient(**default_kwargs)
 
     async def __aenter__(self):
+        """Enter the async context manager."""
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
+        """Exit the async context manager and close the client."""
         await self.aclose()
 
     async def _get(self, endpoint, **kwargs):
@@ -57,6 +61,7 @@ class SumoApiClient:
                 await asyncio.sleep(0.5 * (attempt + 1))
 
     async def get_all_rikishi(self):
+        """Retrieve all rikishi by paging through the API."""
         all_rikishi = []
         skip = 0
         while True:
@@ -98,6 +103,7 @@ class SumoApiClient:
         return response.json()
 
     async def get_ranking_history(self, rikishi_ids):
+        """Fetch ranking history for multiple rikishi concurrently."""
         tasks = []
         for rikishi_id in rikishi_ids:
             tasks.append(
@@ -116,6 +122,7 @@ class SumoApiClient:
         return response.json()
 
     async def get_measurements_history(self, rikishi_ids):
+        """Retrieve measurement history for multiple rikishi."""
         tasks = []
         for rikishi_id in rikishi_ids:
             tasks.append(
@@ -144,15 +151,18 @@ class SumoApiClient:
         return response.json()
 
     async def get_basho_by_id(self, basho_id):
+        """Return basho details if the provided identifier exists."""
         response = await self._get(f"/basho/{basho_id}")
         data = response.json()
         return data if data.get("date") else None
 
     async def get_basho_banzuke(self, basho_id, division):
+        """Retrieve banzuke listings for a specific basho division."""
         response = await self._get(f"/basho/{basho_id}/banzuke/{division}")
         return response.json()
 
     async def get_basho_torikumi(self, basho_id, division, day):
+        """Fetch the torikumi for a basho on a given day."""
         endpoint = f"/basho/{basho_id}/torikumi/{division}/{day}"
         response = await self._get(endpoint)
         return response.json()
@@ -163,4 +173,5 @@ class SumoApiClient:
         return response.json()
 
     async def aclose(self):
+        """Close the underlying ``httpx`` client."""
         await self.client.aclose()
