@@ -36,7 +36,12 @@ def basho_bouts(
 ):
     """Return bouts for a basho with optional filters."""
 
-    queryset = Bout.objects.filter(basho__slug=slug)
+    queryset = Bout.objects.select_related(
+        "division",
+        "east",
+        "west",
+        "winner",
+    ).filter(basho__slug=slug)
     if division:
         queryset = queryset.filter(division__name=division)
     if day is not None:
