@@ -13,23 +13,29 @@
             hx-swap="innerHTML"
             hx-trigger="change delay:200ms, keyup changed delay:500ms">
             <div class="col-md-4">
-                <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search name">
+                <label for="search-name" class="visually-hidden">Search name
+                    <input id="search-name" type="search" name="q" value="{{ query }}" class="form-control" placeholder="Search name">
+                </label>
             </div>
             <div class="col-md-3">
-                <select name="heya" class="form-select">
+                <label for="heya-select" class="visually-hidden">Heya
+                    <select id="heya-select" name="heya" class="form-select">
                     <option value="">All heya</option>
                     {% for h in heyas %}
                     <option value="{{ h.slug }}" {% if h.slug == selected_heya %}selected{% endif %}>{{ h.name }}</option>
                     {% endfor %}
-                </select>
+                    </select>
+                </label>
             </div>
             <div class="col-md-3">
-                <select name="division" class="form-select">
+                <label for="division-select" class="visually-hidden">Division
+                    <select id="division-select" name="division" class="form-select">
                     <option value="">All divisions</option>
                     {% for d in divisions %}
                     <option value="{{ d.name }}" {% if d.name == selected_division %}selected{% endif %}>{{ d.name }}</option>
                     {% endfor %}
-                </select>
+                    </select>
+                </label>
             </div>
             <div class="col-md-2">
                 <div class="form-check form-switch">
