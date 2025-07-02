@@ -22,13 +22,25 @@
         </p>
         <p>Height: {{ rikishi.height }} / Weight: {{ rikishi.weight }}</p>
         <h3 class="mt-4">Basho History</h3>
-        <ul class="list-group list-group-flush">
-            {% for record in rikishi.ranking_history.all %}
-            <li class="list-group-item">
-                <span class="badge badge-primary">{{ record.basho.slug }}</span>
-                {{ record.rank.long_name }}
-            </li>
-            {% endfor %}
+        <ul
+            id="history"
+            class="list-group list-group-flush"
+            hx-get="{% url 'rikishi-history' rikishi.id %}"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+        >
+            <li class="list-group-item">Loading...</li>
+        </ul>
+
+        <h3 class="mt-4">Rating History</h3>
+        <ul
+            id="ratings"
+            class="list-group list-group-flush"
+            hx-get="{% url 'rikishi-ratings' rikishi.id %}"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+        >
+            <li class="list-group-item">Loading...</li>
         </ul>
     </div>
 </div>

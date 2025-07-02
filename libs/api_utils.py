@@ -1,5 +1,12 @@
-from app.models import Basho, Bout, Division, Rikishi
-from app.schemas import BashoSchema, BoutSchema, DivisionSchema, RikishiSchema
+from app.models import Basho, BashoHistory, BashoRating, Bout, Division, Rikishi
+from app.schemas import (
+    BashoHistorySchema,
+    BashoRatingSchema,
+    BashoSchema,
+    BoutSchema,
+    DivisionSchema,
+    RikishiSchema,
+)
 
 
 def rikishi_to_schema(rikishi: Rikishi) -> RikishiSchema:
@@ -53,4 +60,28 @@ def bout_to_schema(bout: Bout) -> BoutSchema:
         west=bout.west_shikona,
         kimarite=bout.kimarite,
         winner=bout.winner.name,
+    )
+
+
+def history_to_schema(record: BashoHistory) -> BashoHistorySchema:
+    """Convert a ``BashoHistory`` instance to ``BashoHistorySchema``."""
+
+    return BashoHistorySchema(
+        basho=record.basho.slug,
+        rank=record.rank.title,
+        height=record.height,
+        weight=record.weight,
+        shikona_en=record.shikona_en,
+        shikona_jp=record.shikona_jp,
+    )
+
+
+def rating_to_schema(rating: BashoRating) -> BashoRatingSchema:
+    """Convert a ``BashoRating`` instance to ``BashoRatingSchema``."""
+
+    return BashoRatingSchema(
+        basho=rating.basho.slug,
+        rating=rating.rating,
+        rd=rating.rd,
+        vol=rating.vol,
     )

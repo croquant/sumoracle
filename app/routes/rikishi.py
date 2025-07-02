@@ -4,9 +4,13 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
-from app.models import Rikishi
-from app.schemas import RikishiSchema
-from libs.api_utils import rikishi_to_schema
+from app.models import BashoHistory, BashoRating, Rikishi
+from app.schemas import BashoHistorySchema, BashoRatingSchema, RikishiSchema
+from libs.api_utils import (
+    history_to_schema,
+    rating_to_schema,
+    rikishi_to_schema,
+)
 
 router = Router()
 
@@ -50,3 +54,27 @@ def rikishi_detail(request, rikishi_id: int):
 
     rikishi = get_object_or_404(Rikishi, pk=rikishi_id)
     return rikishi_to_schema(rikishi)
+
+
+@router.get("{rikishi_id}/history/", response=List[BashoHistorySchema])
+def rikishi_history(request, rikishi_id: int):
+    """Return basho history records for a rikishi."""
+
+    records = (
+        BashoHistory.objects.select_related("basho", "rank")
+        .filter(rikishi_id=rikishi_id)
+        .order_by("-basho__year", "-basho__month")
+    )
+    return [history_to_schema(r) for r in records]
+
+
+@router.get("{rikishi_id}/ratings/", response=List[BashoRatingSchema])
+def rikishi_ratings(request, rikishi_id: int):
+    """Return rating history records for a rikishi."""
+
+    ratings = (
+        BashoRating.objects.select_related("basho")
+        .filter(rikishi_id=rikishi_id)
+        .order_by("-basho__year", "-basho__month")
+    )
+    return [rating_to_schema(r) for r in ratings]

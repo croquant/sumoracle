@@ -1,0 +1,8 @@
+{% for rating in ratings %}
+<li class="list-group-item">
+    <span class="badge bg-primary">{{ rating.basho.slug }}</span>
+    Rating: {{ rating.rating|floatformat:0 }} (RD: {{ rating.rd|floatformat:1 }})
+</li>
+{% empty %}
+<li class="list-group-item">No ratings available.</li>
+{% endfor %}
