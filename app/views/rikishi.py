@@ -11,7 +11,9 @@ class RikishiListView(ListView):
     partial_template_name = "partials/rikishi_rows.html"
 
     def get_template_names(self):
-        if self.request.headers.get("HX-Request"):
+        if self.request.headers.get(
+            "HX-Request"
+        ) and not self.request.headers.get("HX-Boosted"):
             return [self.partial_template_name]
         return [self.template_name]
 
