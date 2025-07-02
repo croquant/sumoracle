@@ -68,3 +68,8 @@ class BoutApiTests(TestCase):
         )
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["east"], "A")
+
+    def test_no_extra_queries(self):
+        """Fetching bouts should use a single optimized query."""
+        with self.assertNumQueries(1):
+            self.get_json(f"/api/basho/{self.basho.slug}/bouts/")
