@@ -1,129 +1,103 @@
 # Sumoracle
 
-**Sumoracle** is a Django application that consumes data from the
-[Sumo API](https://sumo-api.com/).
-It provides models, views and management commands for working with rikishi,
-basho and other sumo related objects.
+Sumoracle is a Django 5.2 project that imports sumo data from
+[sumo-api.com](https://sumo-api.com/).  It exposes HTML pages, a small
+REST API and several management commands for gathering and analysing
+basho results.
 
-## Project setup
+## Features
 
-This project requires **Python 3.12** or later.
+- Async `SumoApiClient` for talking to the public API
+- Models for divisions, rikishi, basho, bouts and historic rankings
+- Pages rendered with Django templates
+- Ninja API routes under `/api/`
+- Async management commands: `populate`, `history`, `bouts` and `glicko`
 
-1. Create and activate a virtual environment (optional but recommended):
+## Quick start
+
+1. Use **Python 3.12** and install the requirements
    ```bash
    python -m venv .venv
    source .venv/bin/activate
-   ```
-2. Install the Python requirements:
-   ```bash
    pip install -r requirements.txt
    ```
-3. Copy `.env.example` to `.env` and adjust the values:
+2. Copy the example environment file and edit the values
    ```bash
    cp .env.example .env
    ```
-   Do not commit the `.env` file to version control.
-4. Apply the initial database migrations:
+3. Run the migrations
    ```bash
    python manage.py migrate
    ```
-5. (Optional) populate the database using these commands:
+4. Optionally load data from the API
    ```bash
-   python manage.py populate  # fetch rikishi data
-   python manage.py history   # import ranking, shikona and measurements history
+   python manage.py populate  # rikishi and divisions
+   python manage.py history   # rankings and measurements
+   python manage.py bouts     # individual matches
+   python manage.py glicko    # compute ratings
+   ```
+5. Start the development server
+   ```bash
+   python manage.py runserver
    ```
 
-## Running the development server
+## Docker
 
-Start Django's built‑in server:
-```bash
-python manage.py runserver
-```
-This uses the settings from `config/settings.py` and an SQLite database.
+A `Dockerfile` and `docker-compose.yml` are provided.  The stack runs the
+web server and a Postgres container.
 
-## Docker quickstart
-
-The project includes a `Dockerfile` and `docker-compose.yml` for running
-the application in containers.
-
-Build the image:
-```bash
-docker build -t sumoracle .
-```
-
-Start the stack (web + Postgres):
 ```bash
 docker compose up
 ```
 
-Run management commands inside the container:
-```bash
-docker compose run web python manage.py migrate
-```
+The entrypoint waits for the database and applies migrations before
+starting Gunicorn.
 
-Environment variables are read from `.env`. See `.env.example` for the
-available keys.
+## Management commands
 
-## Linting and formatting
-
-The project relies on [ruff](https://docs.astral.sh/ruff/) and
-[isort](https://pycqa.github.io/isort/). You can run them directly:
-```bash
-ruff check .
-isort .
-```
-To automatically fix issues run:
-```bash
-ruff --fix .
-ruff format .
-```
-
-## Running tests
-
-Execute the Django test suite with:
-```bash
-python manage.py test
-```
-All tests live inside the `tests` application.
-
-## Coverage reports
-
-The `coverage` package is used to measure test coverage.
-
-To run the test suite with coverage enabled and print a summary:
-```bash
-coverage run manage.py test
-coverage report -m
-```
-Coverage must be at least 95%.
-Open `htmlcov/index.html` in a browser to inspect the report.
-
-## Contributing
-
-We use [pre‑commit](https://pre-commit.com/) to enforce formatting and linting.
-Install the hooks after cloning:
-```bash
-pre-commit install
-```
-Run all hooks locally before submitting a pull request:
-```bash
-pre-commit run --all-files
-```
-Continuous Integration on GitHub Actions runs `ruff check` and the Django test
-suite for every pull request.
-You can see the configuration in `.github/workflows/ci.yml`.
-
-## Repository layout
-
-- `app/` – main Django application with models, views and management commands.
-- `libs/sumoapi.py` – asynchronous client for the public Sumo API.
-- `tests/` – Django app with unit tests.
-
-An excerpt from the Sumo API client shows the asynchronous design:
+All custom commands derive from an asynchronous base class.  A snippet
+from `AsyncBaseCommand` shows the structure:
 ```python
-class SumoApiClient:
-    """Async client for the public Sumo API."""
-    def __init__(self, **client_kwargs):
-        ...
+class AsyncBaseCommand(BaseCommand):
+    """Base class for async management commands."""
+
+    async def run(self, *args, **kwargs):
+        raise NotImplementedError("Subclasses must implement run()")
+
+    def handle(self, *args, **kwargs):
+        try:
+            asyncio.run(self.run(*args, **kwargs))
+        except SumoApiError as exc:
+            self.stderr.write(self.style.ERROR(str(exc)))
 ```
 
+See `app/management/commands/` for the concrete implementations.
+
+## API
+
+The Ninja API lives at `/api/` with routers for rikishi, divisions and
+basho.  Requests return JSON schemas defined in `app/schemas`.
+
+## Tests and formatting
+
+- Lint with Ruff and isort
+  ```bash
+  ruff check .
+  isort .
+  ruff --fix .
+  ruff format .
+  ```
+- Run the test suite with coverage
+  ```bash
+  coverage run manage.py test
+  coverage report -m
+  ```
+  Coverage must stay above 95%.
+
+## Project layout
+
+- `app/` – Django app with models, views and commands
+- `libs/sumoapi.py` – async HTTP client
+- `tests/` – unit tests ensuring >95% coverage
+
+Sumoracle is released under the license found in `LICENSE.md`.
