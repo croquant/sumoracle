@@ -1,0 +1,20 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Basho</th>
+            <th>Rank</th>
+            <th>Rating</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record, rating in records %}
+        <tr>
+            <td>{{ record.basho.slug }}</td>
+            <td>{{ record.rank.long_name }}</td>
+            <td>{% if rating %}{{ rating.rating|floatformat:0 }}{% else %}-{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No history available.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

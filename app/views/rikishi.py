@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.views.generic import DetailView, ListView
 
-from ..models import Division, Heya, Rikishi
+from ..models import BashoHistory, BashoRating, Division, Heya, Rikishi
 
 
 class RikishiListView(ListView):
@@ -62,3 +62,56 @@ class RikishiDetailView(DetailView):
     slug_field = "id"
     slug_url_kwarg = "pk"
     context_object_name = "rikishi"
+
+
+class RikishiHistoryView(ListView):
+    model = BashoHistory
+    template_name = "partials/rikishi_history.html"
+    context_object_name = "history"
+
+    def get_queryset(self):
+        return (
+            BashoHistory.objects.select_related("basho", "rank")
+            .filter(rikishi_id=self.kwargs["pk"])
+            .order_by("-basho__year", "-basho__month")
+        )
+
+
+class RikishiRatingView(ListView):
+    model = BashoRating
+    template_name = "partials/rikishi_ratings.html"
+    context_object_name = "ratings"
+
+    def get_queryset(self):
+        return (
+            BashoRating.objects.select_related("basho")
+            .filter(rikishi_id=self.kwargs["pk"])
+            .order_by("-basho__year", "-basho__month")
+        )
+
+
+class RikishiHistoryTableView(ListView):
+    """Return history records joined with ratings for a rikishi."""
+
+    model = BashoHistory
+    template_name = "partials/rikishi_history_table.html"
+    context_object_name = "records"
+
+    def get_queryset(self):
+        return (
+            BashoHistory.objects.select_related("basho", "rank")
+            .filter(rikishi_id=self.kwargs["pk"])
+            .order_by("-basho__year", "-basho__month")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ratings = {
+            r.basho_id: r
+            for r in BashoRating.objects.filter(rikishi_id=self.kwargs["pk"])
+        }
+        context["records"] = [
+            (record, ratings.get(record.basho_id))
+            for record in context["records"]
+        ]
+        return context

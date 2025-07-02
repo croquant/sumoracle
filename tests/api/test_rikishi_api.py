@@ -2,8 +2,11 @@ from datetime import date
 
 from django.test import TestCase
 
+from app.models.basho import Basho
 from app.models.division import Division
+from app.models.history import BashoHistory
 from app.models.rank import Rank
+from app.models.rating import BashoRating
 from app.models.rikishi import Heya, Rikishi, Shusshin
 from libs.constants import Direction, RankName
 
@@ -106,3 +109,31 @@ class RikishiApiTests(TestCase):
     def test_detail_not_found(self):
         response = self.client.get("/api/rikishi/99/")
         self.assertEqual(response.status_code, 404)
+
+    def test_history_endpoint(self):
+        basho = Basho.objects.create(year=2025, month=1)
+        BashoHistory.objects.create(
+            rikishi_id=1,
+            basho=basho,
+            rank=self.rank1,
+            height=190.0,
+            weight=160.0,
+            shikona_en="Hakuho",
+            shikona_jp="白鵬",
+        )
+        data = self.get_json("/api/rikishi/1/history/")
+        self.assertEqual(data[0]["basho"], basho.slug)
+        self.assertEqual(data[0]["rank"], self.rank1.title)
+
+    def test_ratings_endpoint(self):
+        basho = Basho.objects.create(year=2025, month=1)
+        BashoRating.objects.create(
+            rikishi_id=1,
+            basho=basho,
+            rating=1500.0,
+            rd=200.0,
+            vol=0.06,
+        )
+        data = self.get_json("/api/rikishi/1/ratings/")
+        self.assertEqual(data[0]["basho"], basho.slug)
+        self.assertEqual(data[0]["rating"], 1500.0)

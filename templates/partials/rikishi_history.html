@@ -1,0 +1,8 @@
+{% for record in history %}
+<li class="list-group-item">
+    <span class="badge bg-primary">{{ record.basho.slug }}</span>
+    {{ record.rank.long_name }}
+</li>
+{% empty %}
+<li class="list-group-item">No history available.</li>
+{% endfor %}

@@ -7,7 +7,10 @@ from .views import (
     DivisionListView,
     IndexView,
     RikishiDetailView,
+    RikishiHistoryTableView,
+    RikishiHistoryView,
     RikishiListView,
+    RikishiRatingView,
 )
 
 urlpatterns = [
@@ -17,6 +20,21 @@ urlpatterns = [
         "rikishi/<int:pk>/",
         RikishiDetailView.as_view(),
         name="rikishi-detail",
+    ),
+    path(
+        "rikishi/<int:pk>/history/",
+        RikishiHistoryView.as_view(),
+        name="rikishi-history",
+    ),
+    path(
+        "rikishi/<int:pk>/ratings/",
+        RikishiRatingView.as_view(),
+        name="rikishi-ratings",
+    ),
+    path(
+        "rikishi/<int:pk>/records/",
+        RikishiHistoryTableView.as_view(),
+        name="rikishi-records",
     ),
     path("division/", DivisionListView.as_view(), name="division-list"),
     path(
