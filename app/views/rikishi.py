@@ -88,3 +88,30 @@ class RikishiRatingView(ListView):
             .filter(rikishi_id=self.kwargs["pk"])
             .order_by("-basho__year", "-basho__month")
         )
+
+
+class RikishiHistoryTableView(ListView):
+    """Return history records joined with ratings for a rikishi."""
+
+    model = BashoHistory
+    template_name = "partials/rikishi_history_table.html"
+    context_object_name = "records"
+
+    def get_queryset(self):
+        return (
+            BashoHistory.objects.select_related("basho", "rank")
+            .filter(rikishi_id=self.kwargs["pk"])
+            .order_by("-basho__year", "-basho__month")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ratings = {
+            r.basho_id: r
+            for r in BashoRating.objects.filter(rikishi_id=self.kwargs["pk"])
+        }
+        context["records"] = [
+            (record, ratings.get(record.basho_id))
+            for record in context["records"]
+        ]
+        return context

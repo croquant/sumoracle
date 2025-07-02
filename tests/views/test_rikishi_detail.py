@@ -71,21 +71,13 @@ class RikishiDetailViewTests(TestCase):
         self.assertContains(response, self.rikishi.shusshin.name)
         self.assertContains(response, "192.0")
         self.assertContains(response, "158.0")
-        history_url = reverse("rikishi-history", args=[self.rikishi.id])
-        ratings_url = reverse("rikishi-ratings", args=[self.rikishi.id])
-        self.assertContains(response, f'hx-get="{history_url}"')
-        self.assertContains(response, f'hx-get="{ratings_url}"')
+        records_url = reverse("rikishi-records", args=[self.rikishi.id])
+        self.assertContains(response, f'hx-get="{records_url}"')
 
-    def test_history_endpoint(self):
-        """History endpoint should render basho history."""
+    def test_records_endpoint(self):
+        """Records endpoint should render table with rank and rating."""
 
-        url = reverse("rikishi-history", args=[self.rikishi.id])
+        url = reverse("rikishi-records", args=[self.rikishi.id])
         response = self.client.get(url)
         self.assertContains(response, "202501")
-
-    def test_ratings_endpoint(self):
-        """Ratings endpoint should render rating history."""
-
-        url = reverse("rikishi-ratings", args=[self.rikishi.id])
-        response = self.client.get(url)
         self.assertContains(response, "1500")
