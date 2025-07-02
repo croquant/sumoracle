@@ -3,6 +3,18 @@
 <html lang="en" data-bs-core="elegant">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+        name="description"
+        content="Sumoracle tracks sumo tournaments and rikishi stats."
+    >
+    <meta property="og:title" content="Sumoracle">
+    <meta
+        property="og:description"
+        content="Sumoracle tracks sumo tournaments and rikishi stats."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <title>{% block title %}Sumoracle{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/halfmoon.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/halfmoon.elegant.css' %}">
