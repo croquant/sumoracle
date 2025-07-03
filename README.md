@@ -12,7 +12,7 @@ basho results.
 - Pages rendered with Django templates
 - Ninja API routes under `/api/`
 - Async management commands: `populate`, `history`, `bouts`, `glicko`,
-  `dataset` and `importance`
+  `dataset` and `importance` (neural network)
 
 ## Quick start
 
@@ -37,7 +37,7 @@ basho results.
    python manage.py bouts     # individual matches
    python manage.py glicko    # compute ratings
    python manage.py dataset   # export CSV dataset
-   python manage.py importance <file>  # feature analysis
+   python manage.py importance <file>  # neural network feature analysis
    ```
 5. Start the development server
    ```bash

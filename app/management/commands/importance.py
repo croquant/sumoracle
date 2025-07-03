@@ -1,6 +1,7 @@
 import csv
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.inspection import permutation_importance
+from sklearn.neural_network import MLPClassifier
 
 from app.management.commands import AsyncBaseCommand
 
@@ -22,12 +23,10 @@ class Command(AsyncBaseCommand):
             for row in reader:
                 X.append([float(row[f] or 0) for f in fields])
                 y.append(int(row["east_win"]))
-        model = RandomForestClassifier(
-            random_state=42,
-            n_estimators=50,
-        )
+        model = MLPClassifier(random_state=42, max_iter=500)
         model.fit(X, y)
-        pairs = zip(model.feature_importances_, fields, strict=False)
+        result = permutation_importance(model, X, y, random_state=42)
+        pairs = zip(result.importances_mean, fields, strict=False)
         ranked = sorted(pairs, reverse=True)
         for score, name in ranked:
             self.stdout.write(f"{name}: {score:.3f}")
