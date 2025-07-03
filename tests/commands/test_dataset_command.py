@@ -164,3 +164,42 @@ class DatasetCommandTests(TransactionTestCase):
         west_idx = headers.index("west_bmi")
         self.assertEqual(float(data[east_idx]), 46.3)
         self.assertAlmostEqual(float(data[west_idx]), 46.79, places=2)
+
+    def test_head_to_head_records(self):
+        prev = Basho.objects.create(
+            year=2024,
+            month=11,
+            start_date=date(2024, 11, 10),
+        )
+        division = Division.objects.get(name="Makuuchi")
+        Bout.objects.create(
+            basho=prev,
+            division=division,
+            day=1,
+            match_no=1,
+            east=self.r2,
+            west=self.r1,
+            east_shikona="B",
+            west_shikona="A",
+            kimarite="yorikiri",
+            winner=self.r2,
+        )
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            path = tmp.name
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            call_command("dataset", path)
+        finally:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop.close()
+        with open(path) as fh:
+            rows = list(csv.reader(fh))
+        headers = rows[0]
+        target = next(row for row in rows[1:] if row[0] == "2025")
+        east_idx = headers.index("east_record")
+        west_idx = headers.index("west_record")
+        diff_idx = headers.index("record_diff")
+        self.assertEqual(int(target[east_idx]), 0)
+        self.assertEqual(int(target[west_idx]), 1)
+        self.assertEqual(int(target[diff_idx]), -1)
