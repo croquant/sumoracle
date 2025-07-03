@@ -45,33 +45,39 @@ class Command(AsyncBaseCommand):
                 "west",
                 "division",
             ).order_by(
-                "basho__year", "basho__month", "day", "-division", "match_no"
+                "basho__year",
+                "basho__month",
+                "day",
+                "-division",
+                "match_no",
             )
-            async for bout in qs.aiterator():
-                east_hist = (
-                    await BashoHistory.objects.filter(
-                        rikishi_id=bout.east_id,
-                        basho=bout.basho,
-                    )
-                    .select_related("rank__division")
-                    .afirst()
-                )
-                west_hist = (
-                    await BashoHistory.objects.filter(
-                        rikishi_id=bout.west_id,
-                        basho=bout.basho,
-                    )
-                    .select_related("rank__division")
-                    .afirst()
-                )
-                east_rating = await BashoRating.objects.filter(
-                    rikishi_id=bout.east_id,
-                    basho=bout.basho,
-                ).afirst()
-                west_rating = await BashoRating.objects.filter(
-                    rikishi_id=bout.west_id,
-                    basho=bout.basho,
-                ).afirst()
+
+            bouts = [bout async for bout in qs.aiterator()]
+            basho_ids = {b.basho_id for b in bouts}
+            rikishi_ids = {b.east_id for b in bouts} | {
+                b.west_id for b in bouts
+            }
+
+            hist_qs = BashoHistory.objects.filter(
+                basho_id__in=basho_ids,
+                rikishi_id__in=rikishi_ids,
+            ).select_related("rank__division")
+            histories = [h async for h in hist_qs]
+
+            rating_qs = BashoRating.objects.filter(
+                basho_id__in=basho_ids,
+                rikishi_id__in=rikishi_ids,
+            )
+            ratings = [r async for r in rating_qs]
+
+            hist_map = {(h.rikishi_id, h.basho_id): h for h in histories}
+            rating_map = {(r.rikishi_id, r.basho_id): r for r in ratings}
+
+            for bout in bouts:
+                east_hist = hist_map.get((bout.east_id, bout.basho_id))
+                west_hist = hist_map.get((bout.west_id, bout.basho_id))
+                east_rating = rating_map.get((bout.east_id, bout.basho_id))
+                west_rating = rating_map.get((bout.west_id, bout.basho_id))
                 start = bout.basho.start_date or date(
                     bout.basho.year,
                     bout.basho.month,

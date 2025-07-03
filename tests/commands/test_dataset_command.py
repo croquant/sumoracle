@@ -4,7 +4,9 @@ import tempfile
 from datetime import date
 
 from django.core.management import call_command
+from django.db import connection
 from django.test import TransactionTestCase
+from django.test.utils import CaptureQueriesContext
 
 from app.models import (
     Basho,
@@ -20,7 +22,10 @@ from libs.constants import Direction, RankName
 
 class DatasetCommandTests(TransactionTestCase):
     def setUp(self):
-        division = Division.objects.get(name="Makuuchi")
+        division, _ = Division.objects.get_or_create(
+            name="Makuuchi",
+            defaults={"name_short": "M", "level": 1},
+        )
         self.rank = Rank.objects.create(
             slug="m1e",
             division=division,
@@ -94,3 +99,33 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(int(data[5]), self.r1.id)
         self.assertEqual(int(data[6]), self.r2.id)
         self.assertEqual(int(data[-1]), 1)
+
+    def test_query_count_small(self):
+        """Exporting multiple bouts should use only a few queries."""
+        division, _ = Division.objects.get_or_create(
+            name="Makuuchi",
+            defaults={"name_short": "M", "level": 1},
+        )
+        Bout.objects.create(
+            basho=self.basho,
+            division=division,
+            day=2,
+            match_no=1,
+            east=self.r2,
+            west=self.r1,
+            east_shikona="B",
+            west_shikona="A",
+            kimarite="oshidashi",
+            winner=self.r2,
+        )
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            path = tmp.name
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            with CaptureQueriesContext(connection) as ctx:
+                call_command("dataset", path)
+            self.assertLessEqual(len(ctx), 3)
+        finally:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop.close()
