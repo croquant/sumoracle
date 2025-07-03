@@ -116,10 +116,30 @@ class Command(AsyncBaseCommand):
                         west_hist.rank.value if west_hist else "",
                         east_rating.previous_rating if east_rating else "",
                         west_rating.previous_rating if west_rating else "",
-                        (east_hist.height or bout.east.height or ""),
-                        (west_hist.height or bout.west.height or ""),
-                        (east_hist.weight or bout.east.weight or ""),
-                        (west_hist.weight or bout.west.weight or ""),
+                        (
+                            east_hist
+                            and east_hist.height
+                            or bout.east.height
+                            or ""
+                        ),
+                        (
+                            west_hist
+                            and west_hist.height
+                            or bout.west.weight
+                            or ""
+                        ),
+                        (
+                            east_hist
+                            and east_hist.weight
+                            or bout.east.weight
+                            or ""
+                        ),
+                        (
+                            west_hist
+                            and west_hist.weight
+                            or bout.west.weight
+                            or ""
+                        ),
                         round(east_age, 2) if east_age is not None else "",
                         round(west_age, 2) if west_age is not None else "",
                         round(east_experience, 2)
