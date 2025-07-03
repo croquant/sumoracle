@@ -96,9 +96,24 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(rows[0][0], "year")
         self.assertEqual(len(rows), 2)
         data = rows[1]
-        self.assertEqual(int(data[5]), self.r1.id)
-        self.assertEqual(int(data[6]), self.r2.id)
-        self.assertEqual(int(data[-1]), 1)
+        headers = rows[0]
+        east_idx = headers.index("east_id")
+        west_idx = headers.index("west_id")
+        win_idx = headers.index("east_win")
+        self.assertEqual(int(data[east_idx]), self.r1.id)
+        self.assertEqual(int(data[west_idx]), self.r2.id)
+        self.assertEqual(int(data[win_idx]), 1)
+
+        rating_idx = headers.index("rating_diff")
+        height_idx = headers.index("height_diff")
+        weight_idx = headers.index("weight_diff")
+        age_idx = headers.index("age_diff")
+        exp_idx = headers.index("experience_diff")
+        self.assertEqual(float(data[rating_idx]), 0)
+        self.assertEqual(float(data[height_idx]), -2)
+        self.assertEqual(float(data[weight_idx]), -5)
+        self.assertEqual(data[age_idx], "")
+        self.assertEqual(data[exp_idx], "")
 
     def test_query_count_small(self):
         """Exporting multiple bouts should use only a few queries."""
