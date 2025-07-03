@@ -36,11 +36,14 @@ class Command(AsyncBaseCommand):
             "west_age",
             "east_experience",
             "west_experience",
+            "east_record",
+            "west_record",
             "rating_diff",
             "height_diff",
             "weight_diff",
             "age_diff",
             "experience_diff",
+            "record_diff",
             "east_win",
         ]
         with open(outfile, "w", newline="") as fh:
@@ -83,6 +86,32 @@ class Command(AsyncBaseCommand):
             )
             ratings = [r async for r in rating_qs]
 
+            records: dict[tuple[int, int], dict[date, dict[int, int]]] = {}
+            for b in bouts:
+                start = b.basho.start_date or date(
+                    b.basho.year,
+                    b.basho.month,
+                    1,
+                )
+                pair = tuple(sorted((b.east_id, b.west_id)))
+                records.setdefault(pair, {}).setdefault(start, {})
+                winner_counts = records[pair][start]
+                winner_counts[b.winner_id] = (
+                    winner_counts.get(b.winner_id, 0) + 1
+                )
+
+            cumulative: dict[tuple[int, int], dict[date, dict[int, int]]] = {}
+            for pair, date_map in records.items():
+                dates = sorted(date_map)
+                r1, r2 = pair
+                totals = {r1: 0, r2: 0}
+                before: dict[date, dict[int, int]] = {}
+                for d in dates:
+                    before[d] = totals.copy()
+                    for rid, cnt in date_map[d].items():
+                        totals[rid] = totals.get(rid, 0) + cnt
+                cumulative[pair] = before
+
             hist_map = {(h.rikishi_id, h.basho_id): h for h in histories}
             rating_map = {(r.rikishi_id, r.basho_id): r for r in ratings}
 
@@ -96,6 +125,13 @@ class Command(AsyncBaseCommand):
                     bout.basho.month,
                     1,
                 )
+                pair = tuple(sorted((bout.east_id, bout.west_id)))
+                prior_counts = cumulative.get(pair, {}).get(
+                    start,
+                    {bout.east_id: 0, bout.west_id: 0},
+                )
+                east_record = prior_counts.get(bout.east_id, 0)
+                west_record = prior_counts.get(bout.west_id, 0)
                 east_age = (
                     (start - bout.east.birth_date).days / 365.25
                     if bout.east.birth_date
@@ -169,6 +205,7 @@ class Command(AsyncBaseCommand):
                     and west_experience is not None
                     else ""
                 )
+                record_diff = east_record - west_record
 
                 writer.writerow(
                     [
@@ -197,11 +234,14 @@ class Command(AsyncBaseCommand):
                         round(west_experience, 2)
                         if west_experience is not None
                         else "",
+                        east_record,
+                        west_record,
                         rating_diff,
                         height_diff,
                         weight_diff,
                         age_diff,
                         experience_diff,
+                        record_diff,
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
