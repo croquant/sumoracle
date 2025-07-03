@@ -129,3 +129,23 @@ class DatasetCommandTests(TransactionTestCase):
         finally:
             asyncio.set_event_loop(asyncio.new_event_loop())
             loop.close()
+
+    def test_bmi_columns(self):
+        """BMI values should be written when height and weight are present."""
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            path = tmp.name
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            call_command("dataset", path)
+        finally:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop.close()
+        with open(path) as fh:
+            rows = list(csv.reader(fh))
+        headers = rows[0]
+        data = rows[1]
+        east_idx = headers.index("east_bmi")
+        west_idx = headers.index("west_bmi")
+        self.assertEqual(float(data[east_idx]), 46.3)
+        self.assertAlmostEqual(float(data[west_idx]), 46.79, places=2)

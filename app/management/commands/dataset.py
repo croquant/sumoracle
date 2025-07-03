@@ -30,6 +30,8 @@ class Command(AsyncBaseCommand):
             "west_height",
             "east_weight",
             "west_weight",
+            "east_bmi",
+            "west_bmi",
             "east_age",
             "west_age",
             "east_experience",
@@ -103,6 +105,29 @@ class Command(AsyncBaseCommand):
                     if bout.west.debut
                     else None
                 )
+                east_height = (
+                    east_hist and east_hist.height or bout.east.height or ""
+                )
+                west_height = (
+                    west_hist and west_hist.height or bout.west.height or ""
+                )
+                east_weight = (
+                    east_hist and east_hist.weight or bout.east.weight or ""
+                )
+                west_weight = (
+                    west_hist and west_hist.weight or bout.west.weight or ""
+                )
+                east_bmi = (
+                    round(east_weight / ((east_height / 100) ** 2), 2)
+                    if east_height and east_weight
+                    else ""
+                )
+                west_bmi = (
+                    round(west_weight / ((west_height / 100) ** 2), 2)
+                    if west_height and west_weight
+                    else ""
+                )
+
                 writer.writerow(
                     [
                         bout.basho.year,
@@ -116,30 +141,12 @@ class Command(AsyncBaseCommand):
                         west_hist.rank.value if west_hist else "",
                         east_rating.previous_rating if east_rating else "",
                         west_rating.previous_rating if west_rating else "",
-                        (
-                            east_hist
-                            and east_hist.height
-                            or bout.east.height
-                            or ""
-                        ),
-                        (
-                            west_hist
-                            and west_hist.height
-                            or bout.west.weight
-                            or ""
-                        ),
-                        (
-                            east_hist
-                            and east_hist.weight
-                            or bout.east.weight
-                            or ""
-                        ),
-                        (
-                            west_hist
-                            and west_hist.weight
-                            or bout.west.weight
-                            or ""
-                        ),
+                        east_height,
+                        west_height,
+                        east_weight,
+                        west_weight,
+                        east_bmi,
+                        west_bmi,
                         round(east_age, 2) if east_age is not None else "",
                         round(west_age, 2) if west_age is not None else "",
                         round(east_experience, 2)
