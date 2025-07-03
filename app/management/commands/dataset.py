@@ -41,6 +41,7 @@ class Command(AsyncBaseCommand):
         with open(outfile, "w", newline="") as fh:
             writer = csv.writer(fh)
             writer.writerow(headers)
+            self.stdout.write("Querying bouts...")
             qs = Bout.objects.select_related(
                 "basho",
                 "east",
@@ -63,12 +64,14 @@ class Command(AsyncBaseCommand):
                 b.west_id for b in bouts
             }
 
+            self.stdout.write("Querying basho histories...")
             hist_qs = BashoHistory.objects.filter(
                 basho_id__in=basho_ids,
                 rikishi_id__in=rikishi_ids,
             ).select_related("rank__division")
             histories = [h async for h in hist_qs]
 
+            self.stdout.write("Querying ratings...")
             rating_qs = BashoRating.objects.filter(
                 basho_id__in=basho_ids,
                 rikishi_id__in=rikishi_ids,
@@ -164,6 +167,8 @@ class Command(AsyncBaseCommand):
                 processed += 1
                 if processed % step == 0 or processed == total:
                     percent = processed * 100 // total
-                    self.stdout.write(f"{percent}% complete")
+                    filled = percent // 10
+                    bar = "=" * filled + "." * (10 - filled)
+                    self.stdout.write(f"[{bar}] {percent}%")
         msg = self.style.SUCCESS(f"Dataset saved to {outfile}")
         self.stdout.write(msg)
