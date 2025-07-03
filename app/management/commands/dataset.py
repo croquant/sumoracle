@@ -1,8 +1,47 @@
 import csv
+from collections import defaultdict
 from datetime import date
 
 from app.management.commands import AsyncBaseCommand
 from app.models import BashoHistory, BashoRating, Bout
+
+
+def recent_form(bouts):
+    """Return weighted win percentages keyed by ``(rikishi_id, basho_slug)``."""
+
+    results = defaultdict(lambda: [0, 0])
+    basho_map = {}
+    for bout in bouts:
+        basho_map[bout.basho_id] = bout.basho
+        results[(bout.east_id, bout.basho_id)][1] += 1
+        results[(bout.west_id, bout.basho_id)][1] += 1
+        if bout.winner_id == bout.east_id:
+            results[(bout.east_id, bout.basho_id)][0] += 1
+        else:
+            results[(bout.west_id, bout.basho_id)][0] += 1
+
+    history = defaultdict(list)
+    for (rid, bid), (wins, total) in results.items():
+        pct = wins / total if total else 0
+        history[rid].append((basho_map[bid], pct))
+
+    for recs in history.values():
+        recs.sort(key=lambda r: (r[0].year, r[0].month))
+
+    weights = [1.0, 0.5, 0.25]
+    form = {}
+    for rid, recs in history.items():
+        for idx, (basho, _) in enumerate(recs):
+            prior = [r[1] for r in recs[max(0, idx - 3) : idx]][::-1]
+            if not prior:
+                continue
+            value = 0.0
+            weight_total = 0.0
+            for w, pct in zip(weights, prior):  # noqa: B905
+                value += w * pct
+                weight_total += w
+            form[(rid, basho.slug)] = round(value / weight_total * 100, 2)
+    return form
 
 
 class Command(AsyncBaseCommand):
@@ -44,6 +83,8 @@ class Command(AsyncBaseCommand):
             "age_diff",
             "experience_diff",
             "record_diff",
+            "east_form",
+            "west_form",
             "east_win",
         ]
         with open(outfile, "w", newline="") as fh:
@@ -114,6 +155,7 @@ class Command(AsyncBaseCommand):
 
             hist_map = {(h.rikishi_id, h.basho_id): h for h in histories}
             rating_map = {(r.rikishi_id, r.basho_id): r for r in ratings}
+            form_map = recent_form(bouts)
 
             for bout in bouts:
                 east_hist = hist_map.get((bout.east_id, bout.basho_id))
@@ -206,6 +248,8 @@ class Command(AsyncBaseCommand):
                     else ""
                 )
                 record_diff = east_record - west_record
+                east_form = form_map.get((bout.east_id, bout.basho_id), "")
+                west_form = form_map.get((bout.west_id, bout.basho_id), "")
 
                 writer.writerow(
                     [
@@ -242,6 +286,8 @@ class Command(AsyncBaseCommand):
                         age_diff,
                         experience_diff,
                         record_diff,
+                        east_form,
+                        west_form,
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )

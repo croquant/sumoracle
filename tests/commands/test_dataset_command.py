@@ -109,11 +109,15 @@ class DatasetCommandTests(TransactionTestCase):
         weight_idx = headers.index("weight_diff")
         age_idx = headers.index("age_diff")
         exp_idx = headers.index("experience_diff")
+        form_idx_east = headers.index("east_form")
+        form_idx_west = headers.index("west_form")
         self.assertEqual(float(data[rating_idx]), 0)
         self.assertEqual(float(data[height_idx]), -2)
         self.assertEqual(float(data[weight_idx]), -5)
         self.assertEqual(data[age_idx], "")
         self.assertEqual(data[exp_idx], "")
+        self.assertEqual(data[form_idx_east], "")
+        self.assertEqual(data[form_idx_west], "")
 
     def test_query_count_small(self):
         """Exporting multiple bouts should use only a few queries."""
@@ -200,6 +204,10 @@ class DatasetCommandTests(TransactionTestCase):
         east_idx = headers.index("east_record")
         west_idx = headers.index("west_record")
         diff_idx = headers.index("record_diff")
+        east_form_idx = headers.index("east_form")
+        west_form_idx = headers.index("west_form")
         self.assertEqual(int(target[east_idx]), 0)
         self.assertEqual(int(target[west_idx]), 1)
         self.assertEqual(int(target[diff_idx]), -1)
+        self.assertEqual(float(target[east_form_idx]), 0.0)
+        self.assertEqual(float(target[west_form_idx]), 100.0)
