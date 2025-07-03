@@ -3,11 +3,32 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <h2>Welcome to Sumoracle</h2>
-    <p>Browse divisions and rikishi information.</p>
-    <nav>
-        <ul>
-            <li><a href="{% url 'division-list' %}">Divisions</a></li>
-        </ul>
-    </nav>
+<div class="row row-cols-1 row-cols-md-3 g-3 my-3">
+    <div class="col">
+        <a class="card h-100 text-decoration-none" href="{% url 'division-list' %}">
+            <div class="card-body text-center">
+                <h5 class="card-title">Divisions</h5>
+                <p class="card-text display-6">{{ division_count }}</p>
+            </div>
+        </a>
+    </div>
+    <div class="col">
+        <a class="card h-100 text-decoration-none" href="{% url 'rikishi-list' %}">
+            <div class="card-body text-center">
+                <h5 class="card-title">Active Rikishi</h5>
+                <p class="card-text display-6">{{ rikishi_count }}</p>
+            </div>
+        </a>
+    </div>
+    <div class="col">
+        <a class="card h-100 text-decoration-none" href="{% url 'basho-list' %}">
+            <div class="card-body text-center">
+                <h5 class="card-title">Latest Basho</h5>
+                <p class="card-text display-6">
+                    {% if latest_basho %}{{ latest_basho }}{% else %}None{% endif %}
+                </p>
+            </div>
+        </a>
+    </div>
+</div>
 {% endblock %}
