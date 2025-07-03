@@ -118,12 +118,8 @@ class Rikishi(models.Model):
         null=True,
         related_name="rikishi",
     )
-    height = models.DecimalField(
-        max_digits=4, decimal_places=1, blank=True, null=True
-    )
-    weight = models.DecimalField(
-        max_digits=4, decimal_places=1, blank=True, null=True
-    )
+    height = models.FloatField(blank=True, null=True)
+    weight = models.FloatField(blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
     debut = models.DateField(blank=True, null=True)
     intai = models.DateField(blank=True, null=True)
