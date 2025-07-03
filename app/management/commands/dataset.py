@@ -55,6 +55,9 @@ class Command(AsyncBaseCommand):
             )
 
             bouts = [bout async for bout in qs.aiterator()]
+            total = len(bouts)
+            step = max(total // 10, 1)
+            processed = 0
             basho_ids = {b.basho_id for b in bouts}
             rikishi_ids = {b.east_id for b in bouts} | {
                 b.west_id for b in bouts
@@ -158,5 +161,9 @@ class Command(AsyncBaseCommand):
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
+                processed += 1
+                if processed % step == 0 or processed == total:
+                    percent = processed * 100 // total
+                    self.stdout.write(f"{percent}% complete")
         msg = self.style.SUCCESS(f"Dataset saved to {outfile}")
         self.stdout.write(msg)
