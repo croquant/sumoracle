@@ -81,8 +81,10 @@ class Command(AsyncBaseCommand):
             ascending=False
         )
 
-        self.stdout.write("Selected features with scores:")
-        for feat, score in ranking.loc[selected].items():
+        self.stdout.write("Selected features with scores (sorted):")
+        for feat, score in (
+            ranking.loc[selected].sort_values(ascending=False).items()
+        ):
             self.stdout.write(f"- {feat}: {score:.2f}")
 
         if outfile:
