@@ -88,9 +88,9 @@ class DatasetCommandTests(TransactionTestCase):
             loop.close()
         with open(path) as fh:
             rows = list(csv.reader(fh))
-        self.assertEqual(rows[0][0], "basho")
+        self.assertEqual(rows[0][0], "year")
         self.assertEqual(len(rows), 2)
         data = rows[1]
-        self.assertEqual(int(data[2]), self.r1.id)
-        self.assertEqual(int(data[3]), self.r2.id)
+        self.assertEqual(int(data[5]), self.r1.id)
+        self.assertEqual(int(data[6]), self.r2.id)
         self.assertEqual(int(data[-1]), 1)
