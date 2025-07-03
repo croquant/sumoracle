@@ -11,7 +11,8 @@ basho results.
 - Models for divisions, rikishi, basho, bouts and historic rankings
 - Pages rendered with Django templates
 - Ninja API routes under `/api/`
-- Async management commands: `populate`, `history`, `bouts` and `glicko`
+- Async management commands: `populate`, `history`, `bouts`, `glicko`,
+  `dataset` and `importance`
 
 ## Quick start
 
@@ -35,6 +36,8 @@ basho results.
    python manage.py history   # rankings and measurements
    python manage.py bouts     # individual matches
    python manage.py glicko    # compute ratings
+   python manage.py dataset   # export CSV dataset
+   python manage.py importance <file>  # feature analysis
    ```
 5. Start the development server
    ```bash
