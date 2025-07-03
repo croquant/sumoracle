@@ -8,10 +8,21 @@ class Command(BaseCommand):
     help = "Calculate Glicko ratings for each rikishi in each basho"
 
     def handle(self, *args, **options):
+        # Clear existing ratings
+        self.stdout.write("Clearing existing ratings...")
+        BashoRating.objects.all().delete()
+
+        self.stdout.write("Calculating Glicko ratings...")
         players: dict[int, Player] = {}
         basho_qs = Basho.objects.order_by("year", "month")
         for basho in basho_qs.iterator():
-            bouts = Bout.objects.filter(basho=basho)
+            bouts = Bout.objects.filter(basho=basho).order_by("day", "match_no")
+            if not bouts.exists():
+                self.stdout.write(
+                    f"No bouts found for {basho.slug}. Skipping..."
+                )
+                continue
+
             results: dict[int, list[tuple[float, float, int]]] = {}
             for bout in bouts.iterator():
                 east = players.setdefault(bout.east_id, Player())
