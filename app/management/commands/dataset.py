@@ -36,6 +36,11 @@ class Command(AsyncBaseCommand):
             "west_age",
             "east_experience",
             "west_experience",
+            "rating_diff",
+            "height_diff",
+            "weight_diff",
+            "age_diff",
+            "experience_diff",
             "east_win",
         ]
         with open(outfile, "w", newline="") as fh:
@@ -134,6 +139,37 @@ class Command(AsyncBaseCommand):
                     else ""
                 )
 
+                rating_diff = (
+                    round(
+                        east_rating.previous_rating
+                        - west_rating.previous_rating,
+                        2,
+                    )
+                    if east_rating and west_rating
+                    else ""
+                )
+                height_diff = (
+                    round(east_height - west_height, 1)
+                    if east_height and west_height
+                    else ""
+                )
+                weight_diff = (
+                    round(east_weight - west_weight, 1)
+                    if east_weight and west_weight
+                    else ""
+                )
+                age_diff = (
+                    round(east_age - west_age, 2)
+                    if east_age is not None and west_age is not None
+                    else ""
+                )
+                experience_diff = (
+                    round(east_experience - west_experience, 2)
+                    if east_experience is not None
+                    and west_experience is not None
+                    else ""
+                )
+
                 writer.writerow(
                     [
                         bout.basho.year,
@@ -161,6 +197,11 @@ class Command(AsyncBaseCommand):
                         round(west_experience, 2)
                         if west_experience is not None
                         else "",
+                        rating_diff,
+                        height_diff,
+                        weight_diff,
+                        age_diff,
+                        experience_diff,
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
