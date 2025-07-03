@@ -32,13 +32,28 @@ class Command(AsyncBaseCommand):
         X = df.drop("east_win", axis=1)
         y = df["east_win"]
 
+        # convert possible numeric strings to numbers
+        X = X.apply(pd.to_numeric, errors="ignore")
+
+        # drop columns with too many missing values
         miss = X.isnull().mean()
         drop_cols = miss[miss > 0.2].index.tolist()
         if drop_cols:
             X = X.drop(columns=drop_cols)
             self.stdout.write(f"Dropped {len(drop_cols)} columns: {drop_cols}")
 
+        # impute remaining missing values
+        num_cols = X.select_dtypes(include="number").columns
         cat_cols = X.select_dtypes(exclude="number").columns
+
+        for col in num_cols:
+            if X[col].isnull().any():
+                X[col] = X[col].fillna(X[col].median())
+
+        for col in cat_cols:
+            if X[col].isnull().any():
+                mode = X[col].mode().dropna()
+                X[col] = X[col].fillna(mode[0] if not mode.empty else "missing")
         X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
 
         corr = X.corr().abs()
