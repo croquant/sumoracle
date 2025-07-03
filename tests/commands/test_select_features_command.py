@@ -107,4 +107,4 @@ class SelectFeaturesCommandTests(TransactionTestCase):
             reader = csv.reader(fh)
             headers = next(reader)
         self.assertLessEqual(len(headers), 6)
-        self.assertIn("Selected features with scores:", out.getvalue())
+        self.assertIn("Selected features with scores", out.getvalue())
