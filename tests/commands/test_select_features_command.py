@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import io
 import tempfile
 
 from django.core.management import call_command
@@ -88,9 +89,17 @@ class SelectFeaturesCommandTests(TransactionTestCase):
             out_path = out.name
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        out = io.StringIO()
         try:
             call_command("dataset", dataset_path)
-            call_command("select_features", dataset_path, out_path, "--k", "5")
+            call_command(
+                "select_features",
+                dataset_path,
+                out_path,
+                "--k",
+                "5",
+                stdout=out,
+            )
         finally:
             asyncio.set_event_loop(asyncio.new_event_loop())
             loop.close()
@@ -98,3 +107,4 @@ class SelectFeaturesCommandTests(TransactionTestCase):
             reader = csv.reader(fh)
             headers = next(reader)
         self.assertLessEqual(len(headers), 6)
+        self.assertIn("Selected features with scores:", out.getvalue())

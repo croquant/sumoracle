@@ -73,12 +73,18 @@ class Command(AsyncBaseCommand):
 
         k = min(k, X_scaled.shape[1])
         selector = SelectKBest(score_func=f_classif, k=k).fit(X_scaled, y_train)
-        selected = X.columns[selector.get_support()].tolist()
+        mask = selector.get_support()
+        scores = selector.scores_
+        selected = X.columns[mask]
 
-        self.stdout.write("Selected features:")
-        for feat in selected:
-            self.stdout.write(f"- {feat}")
+        ranking = pd.Series(scores, index=X.columns).sort_values(
+            ascending=False
+        )
+
+        self.stdout.write("Selected features with scores:")
+        for feat, score in ranking.loc[selected].items():
+            self.stdout.write(f"- {feat}: {score:.2f}")
 
         if outfile:
-            df[selected + ["east_win"]].to_csv(outfile, index=False)
+            df[selected.tolist() + ["east_win"]].to_csv(outfile, index=False)
             self.stdout.write(self.style.SUCCESS(f"Saved to {outfile}"))
