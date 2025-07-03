@@ -15,8 +15,11 @@ class Command(AsyncBaseCommand):
 
     async def run(self, outfile, **options):
         headers = [
-            "basho",
+            "year",
+            "month",
+            "division",
             "day",
+            "match_no",
             "east_id",
             "west_id",
             "east_rank",
@@ -29,6 +32,8 @@ class Command(AsyncBaseCommand):
             "west_weight",
             "east_age",
             "west_age",
+            "east_experience",
+            "west_experience",
             "east_win",
         ]
         with open(outfile, "w", newline="") as fh:
@@ -38,7 +43,10 @@ class Command(AsyncBaseCommand):
                 "basho",
                 "east",
                 "west",
-            ).order_by("basho__year", "basho__month", "day", "match_no")
+                "division",
+            ).order_by(
+                "basho__year", "basho__month", "day", "-division", "match_no"
+            )
             async for bout in qs.aiterator():
                 east_hist = (
                     await BashoHistory.objects.filter(
@@ -79,22 +87,41 @@ class Command(AsyncBaseCommand):
                     if bout.west.birth_date
                     else None
                 )
+                east_experience = (
+                    (start - bout.east.debut).days / 365.25
+                    if bout.east.debut
+                    else None
+                )
+                west_experience = (
+                    (start - bout.west.debut).days / 365.25
+                    if bout.west.debut
+                    else None
+                )
                 writer.writerow(
                     [
-                        bout.basho.slug,
+                        bout.basho.year,
+                        bout.basho.month,
+                        bout.division.level,
                         bout.day,
+                        bout.match_no,
                         bout.east_id,
                         bout.west_id,
                         east_hist.rank.value if east_hist else "",
                         west_hist.rank.value if west_hist else "",
-                        east_rating.rating if east_rating else "",
-                        west_rating.rating if west_rating else "",
+                        east_rating.previous_rating if east_rating else "",
+                        west_rating.previous_rating if west_rating else "",
                         (east_hist.height or bout.east.height or ""),
                         (west_hist.height or bout.west.height or ""),
                         (east_hist.weight or bout.east.weight or ""),
                         (west_hist.weight or bout.west.weight or ""),
                         round(east_age, 2) if east_age is not None else "",
                         round(west_age, 2) if west_age is not None else "",
+                        round(east_experience, 2)
+                        if east_experience is not None
+                        else "",
+                        round(west_experience, 2)
+                        if west_experience is not None
+                        else "",
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
