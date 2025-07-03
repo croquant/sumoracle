@@ -8,10 +8,21 @@ class Command(BaseCommand):
     help = "Calculate Glicko ratings for each rikishi in each basho"
 
     def handle(self, *args, **options):
+        # Clear existing ratings
+        self.stdout.write("Clearing existing ratings...")
+        BashoRating.objects.all().delete()
+
+        self.stdout.write("Calculating Glicko ratings...")
         players: dict[int, Player] = {}
         basho_qs = Basho.objects.order_by("year", "month")
         for basho in basho_qs.iterator():
-            bouts = Bout.objects.filter(basho=basho)
+            bouts = Bout.objects.filter(basho=basho).order_by("day", "match_no")
+            if not bouts.exists():
+                self.stdout.write(
+                    f"No bouts found for {basho.slug}. Skipping..."
+                )
+                continue
+
             results: dict[int, list[tuple[float, float, int]]] = {}
             for bout in bouts.iterator():
                 east = players.setdefault(bout.east_id, Player())
@@ -30,24 +41,27 @@ class Command(BaseCommand):
                 for h in BashoHistory.objects.filter(basho=basho).iterator()
             }
 
-            for rikishi_id, recs in results.items():
-                player = players.setdefault(rikishi_id, Player())
-                ratings = [r for r, _, _ in recs]
-                rds = [rd for _, rd, _ in recs]
-                outcomes = [o for _, _, o in recs]
-                player.update_player(ratings, rds, outcomes)
-
-            for rikishi_id in histories:
-                if rikishi_id not in results:
-                    players.setdefault(rikishi_id, Player()).did_not_compete()
-
             ratings = []
             for rikishi_id in histories:
-                player = players[rikishi_id]
+                player = players.setdefault(rikishi_id, Player())
+                before_rating = player.rating
+                before_rd = player.rd
+                before_vol = player.vol
+                recs = results.get(rikishi_id)
+                if recs:
+                    r_list = [r for r, _, _ in recs]
+                    rd_list = [rd for _, rd, _ in recs]
+                    o_list = [o for _, _, o in recs]
+                    player.update_player(r_list, rd_list, o_list)
+                else:
+                    player.did_not_compete()
                 ratings.append(
                     BashoRating(
                         rikishi_id=rikishi_id,
                         basho=basho,
+                        previous_rating=before_rating,
+                        previous_rd=before_rd,
+                        previous_vol=before_vol,
                         rating=player.rating,
                         rd=player.rd,
                         vol=player.vol,

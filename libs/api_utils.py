@@ -81,6 +81,9 @@ def rating_to_schema(rating: BashoRating) -> BashoRatingSchema:
 
     return BashoRatingSchema(
         basho=rating.basho.slug,
+        previous_rating=rating.previous_rating,
+        previous_rd=rating.previous_rd,
+        previous_vol=rating.previous_vol,
         rating=rating.rating,
         rd=rating.rd,
         vol=rating.vol,

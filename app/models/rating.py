@@ -1,5 +1,7 @@
 from django.db import models
 
+from libs.constants import DEFAULT_RATING, DEFAULT_RD, DEFAULT_VOLATILITY
+
 from .basho import Basho
 from .rikishi import Rikishi
 
@@ -18,6 +20,9 @@ class BashoRating(models.Model):
         on_delete=models.CASCADE,
         related_name="ratings",
     )
+    previous_rating = models.FloatField(default=DEFAULT_RATING)
+    previous_rd = models.FloatField(default=DEFAULT_RD)
+    previous_vol = models.FloatField(default=DEFAULT_VOLATILITY)
     rating = models.FloatField()
     rd = models.FloatField()
     vol = models.FloatField()

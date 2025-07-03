@@ -130,10 +130,16 @@ class RikishiApiTests(TestCase):
         BashoRating.objects.create(
             rikishi_id=1,
             basho=basho,
+            previous_rating=1500.0,
+            previous_rd=350.0,
+            previous_vol=0.11,
             rating=1500.0,
             rd=200.0,
             vol=0.06,
         )
         data = self.get_json("/api/rikishi/1/ratings/")
         self.assertEqual(data[0]["basho"], basho.slug)
+        self.assertEqual(data[0]["previous_rating"], 1500.0)
+        self.assertEqual(data[0]["previous_rd"], 350.0)
+        self.assertEqual(data[0]["previous_vol"], 0.11)
         self.assertEqual(data[0]["rating"], 1500.0)
