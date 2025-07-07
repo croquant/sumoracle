@@ -26,6 +26,10 @@ class Command(AsyncBaseCommand):
             "west_rank",
             "east_rating",
             "west_rating",
+            "east_rd",
+            "west_rd",
+            "east_vol",
+            "west_vol",
             "east_height",
             "west_height",
             "east_weight",
@@ -44,6 +48,10 @@ class Command(AsyncBaseCommand):
             "age_diff",
             "experience_diff",
             "record_diff",
+            "rank_diff",
+            "rd_diff",
+            "vol_diff",
+            "bmi_diff",
             "east_win",
         ]
         with open(outfile, "w", newline="") as fh:
@@ -183,6 +191,34 @@ class Command(AsyncBaseCommand):
                     else ""
                 )
                 record_diff = east_record - west_record
+                rank_diff = (
+                    east_hist.rank.value - west_hist.rank.value
+                    if east_hist and west_hist
+                    else ""
+                )
+                east_rd = east_rating.previous_rd if east_rating else ""
+                west_rd = west_rating.previous_rd if west_rating else ""
+                rd_diff = (
+                    round(east_rd - west_rd, 2)
+                    if east_rating and west_rating
+                    else ""
+                )
+                east_vol = (
+                    round(east_rating.previous_vol, 5) if east_rating else ""
+                )
+                west_vol = (
+                    round(west_rating.previous_vol, 5) if west_rating else ""
+                )
+                vol_diff = (
+                    round(east_vol - west_vol, 5)
+                    if east_rating and west_rating
+                    else ""
+                )
+                bmi_diff = (
+                    round(east_bmi - west_bmi, 2)
+                    if east_bmi and west_bmi
+                    else ""
+                )
 
                 writer.writerow(
                     [
@@ -197,6 +233,10 @@ class Command(AsyncBaseCommand):
                         west_hist.rank.value if west_hist else "",
                         east_rating.previous_rating if east_rating else "",
                         west_rating.previous_rating if west_rating else "",
+                        east_rd,
+                        west_rd,
+                        east_vol,
+                        west_vol,
                         east_height,
                         west_height,
                         east_weight,
@@ -219,6 +259,10 @@ class Command(AsyncBaseCommand):
                         age_diff,
                         experience_diff,
                         record_diff,
+                        rank_diff,
+                        rd_diff,
+                        vol_diff,
+                        bmi_diff,
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )

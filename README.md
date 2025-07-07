@@ -76,7 +76,10 @@ See `app/management/commands/` for the concrete implementations.
 ## Dataset generation
 
 Use `manage.py dataset OUTFILE` to write a CSV of bout features. The
-command accepts optional filtering flags to limit the exported rows. After
+command accepts optional filtering flags to limit the exported rows. The
+dataset includes differences such as rank, rating deviation and volatility
+(alongside the underlying ``east_rd``/``west_rd`` and ``east_vol``/``west_vol``
+values) plus BMI to capture advantages between opponents. After
 producing the file you can run `manage.py select_features INFILE OUTFILE` to
 reduce the columns based on ANOVA F-scores. These utilities require
 `scikit-learn` and `pandas` which are provided in `requirements.txt`.
