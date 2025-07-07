@@ -203,3 +203,89 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(int(target[east_idx]), 0)
         self.assertEqual(int(target[west_idx]), 1)
         self.assertEqual(int(target[diff_idx]), -1)
+
+    def test_missing_history(self):
+        """Rows should handle bouts missing ``BashoHistory`` entries."""
+        r3 = Rikishi.objects.create(id=3, name="C", name_jp="C")
+        r4 = Rikishi.objects.create(id=4, name="D", name_jp="D")
+        division = Division.objects.get(name="Makuuchi")
+        Bout.objects.create(
+            basho=self.basho,
+            division=division,
+            day=2,
+            match_no=1,
+            east=r3,
+            west=r4,
+            east_shikona="C",
+            west_shikona="D",
+            kimarite="oshidashi",
+            winner=r3,
+        )
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            path = tmp.name
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            call_command("dataset", path)
+        finally:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop.close()
+        with open(path) as fh:
+            rows = list(csv.reader(fh))
+        headers = rows[0]
+        target = next(
+            row
+            for row in rows[1:]
+            if row[headers.index("east_id")] == str(r3.id)
+        )
+        self.assertEqual(target[headers.index("east_height")], "")
+        self.assertEqual(target[headers.index("west_weight")], "")
+        self.assertEqual(target[headers.index("height_diff")], "")
+
+    def test_missing_rating(self):
+        """Rows should handle bouts missing ``BashoRating`` entries."""
+        r3 = Rikishi.objects.create(id=3, name="C", name_jp="C")
+        r4 = Rikishi.objects.create(id=4, name="D", name_jp="D")
+        BashoHistory.objects.create(
+            rikishi=r3,
+            basho=self.basho,
+            rank=self.rank,
+        )
+        BashoHistory.objects.create(
+            rikishi=r4,
+            basho=self.basho,
+            rank=self.rank,
+        )
+        division = Division.objects.get(name="Makuuchi")
+        Bout.objects.create(
+            basho=self.basho,
+            division=division,
+            day=3,
+            match_no=1,
+            east=r3,
+            west=r4,
+            east_shikona="C",
+            west_shikona="D",
+            kimarite="yorikiri",
+            winner=r4,
+        )
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            path = tmp.name
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            call_command("dataset", path)
+        finally:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop.close()
+        with open(path) as fh:
+            rows = list(csv.reader(fh))
+        headers = rows[0]
+        target = next(
+            row
+            for row in rows[1:]
+            if row[headers.index("east_id")] == str(r3.id)
+        )
+        self.assertEqual(target[headers.index("east_rating")], "")
+        self.assertEqual(target[headers.index("west_rating")], "")
+        self.assertEqual(target[headers.index("rating_diff")], "")
