@@ -49,6 +49,21 @@ class Command(AsyncBaseCommand):
         with open(outfile, "w", newline="") as fh:
             writer = csv.writer(fh)
             writer.writerow(headers)
+
+            self.stdout.write("Querying basho histories...")
+            histories = [
+                h
+                async for h in BashoHistory.objects.select_related(
+                    "rank__division"
+                )
+            ]
+
+            self.stdout.write("Querying ratings...")
+            ratings = [r async for r in BashoRating.objects.all()]
+
+            hist_map = {(h.rikishi_id, h.basho_id): h for h in histories}
+            rating_map = {(r.rikishi_id, r.basho_id): r for r in ratings}
+
             self.stdout.write("Querying bouts...")
             qs = Bout.objects.select_related(
                 "basho",
@@ -63,75 +78,37 @@ class Command(AsyncBaseCommand):
                 "match_no",
             )
 
-            bouts = [bout async for bout in qs.aiterator()]
-            total = len(bouts)
-            step = max(total // 10, 1)
             processed = 0
-            basho_ids = {b.basho_id for b in bouts}
-            rikishi_ids = {b.east_id for b in bouts} | {
-                b.west_id for b in bouts
-            }
+            step = 1000
+            totals_map: dict[tuple[int, int], dict[int, int]] = {}
+            start_map: dict[tuple[int, int, date], dict[int, int]] = {}
 
-            self.stdout.write("Querying basho histories...")
-            hist_qs = BashoHistory.objects.filter(
-                basho_id__in=basho_ids,
-                rikishi_id__in=rikishi_ids,
-            ).select_related("rank__division")
-            histories = [h async for h in hist_qs]
-
-            self.stdout.write("Querying ratings...")
-            rating_qs = BashoRating.objects.filter(
-                basho_id__in=basho_ids,
-                rikishi_id__in=rikishi_ids,
-            )
-            ratings = [r async for r in rating_qs]
-
-            records: dict[tuple[int, int], dict[date, dict[int, int]]] = {}
-            for b in bouts:
-                start = b.basho.start_date or date(
-                    b.basho.year,
-                    b.basho.month,
-                    1,
-                )
-                pair = tuple(sorted((b.east_id, b.west_id)))
-                records.setdefault(pair, {}).setdefault(start, {})
-                winner_counts = records[pair][start]
-                winner_counts[b.winner_id] = (
-                    winner_counts.get(b.winner_id, 0) + 1
-                )
-
-            cumulative: dict[tuple[int, int], dict[date, dict[int, int]]] = {}
-            for pair, date_map in records.items():
-                dates = sorted(date_map)
-                r1, r2 = pair
-                totals = {r1: 0, r2: 0}
-                before: dict[date, dict[int, int]] = {}
-                for d in dates:
-                    before[d] = totals.copy()
-                    for rid, cnt in date_map[d].items():
-                        totals[rid] = totals.get(rid, 0) + cnt
-                cumulative[pair] = before
-
-            hist_map = {(h.rikishi_id, h.basho_id): h for h in histories}
-            rating_map = {(r.rikishi_id, r.basho_id): r for r in ratings}
-
-            for bout in bouts:
-                east_hist = hist_map.get((bout.east_id, bout.basho_id))
-                west_hist = hist_map.get((bout.west_id, bout.basho_id))
-                east_rating = rating_map.get((bout.east_id, bout.basho_id))
-                west_rating = rating_map.get((bout.west_id, bout.basho_id))
+            async for bout in qs.aiterator(chunk_size=1000):
                 start = bout.basho.start_date or date(
                     bout.basho.year,
                     bout.basho.month,
                     1,
                 )
                 pair = tuple(sorted((bout.east_id, bout.west_id)))
-                prior_counts = cumulative.get(pair, {}).get(
-                    start,
+
+                totals = totals_map.setdefault(
+                    pair,
                     {bout.east_id: 0, bout.west_id: 0},
                 )
+                start_key = (pair[0], pair[1], start)
+                if start_key not in start_map:
+                    start_map[start_key] = totals.copy()
+
+                prior_counts = start_map[start_key]
+
+                east_hist = hist_map.get((bout.east_id, bout.basho_id))
+                west_hist = hist_map.get((bout.west_id, bout.basho_id))
+                east_rating = rating_map.get((bout.east_id, bout.basho_id))
+                west_rating = rating_map.get((bout.west_id, bout.basho_id))
+
                 east_record = prior_counts.get(bout.east_id, 0)
                 west_record = prior_counts.get(bout.west_id, 0)
+
                 east_age = (
                     (start - bout.east.birth_date).days / 365.25
                     if bout.east.birth_date
@@ -245,11 +222,12 @@ class Command(AsyncBaseCommand):
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
+
+                totals[bout.winner_id] = totals.get(bout.winner_id, 0) + 1
+
                 processed += 1
-                if processed % step == 0 or processed == total:
-                    percent = processed * 100 // total
-                    filled = percent // 10
-                    bar = "=" * filled + "." * (10 - filled)
-                    self.stdout.write(f"[{bar}] {percent}%")
+                if processed % step == 0:
+                    self.stdout.write(f"Processed {processed} bouts")
+
         msg = self.style.SUCCESS(f"Dataset saved to {outfile}")
         self.stdout.write(msg)
