@@ -14,8 +14,10 @@ from app.models import (
     BashoRating,
     Bout,
     Division,
+    Heya,
     Rank,
     Rikishi,
+    Shusshin,
 )
 from libs.constants import Direction, RankName
 
@@ -38,8 +40,27 @@ class DatasetCommandTests(TransactionTestCase):
             month=1,
             start_date=date(2025, 1, 10),
         )
-        self.r1 = Rikishi.objects.create(id=1, name="A", name_jp="A")
-        self.r2 = Rikishi.objects.create(id=2, name="B", name_jp="B")
+        self.heya1 = Heya.objects.create(name="Miyagino")
+        self.heya2 = Heya.objects.create(name="Isegahama")
+        self.shusshin1 = Shusshin.objects.create(name="Tokyo")
+        self.shusshin2 = Shusshin.objects.create(
+            name="Mongolia", international=True
+        )
+
+        self.r1 = Rikishi.objects.create(
+            id=1,
+            name="A",
+            name_jp="A",
+            heya=self.heya1,
+            shusshin=self.shusshin1,
+        )
+        self.r2 = Rikishi.objects.create(
+            id=2,
+            name="B",
+            name_jp="B",
+            heya=self.heya2,
+            shusshin=self.shusshin2,
+        )
         BashoHistory.objects.create(
             rikishi=self.r1,
             basho=self.basho,
@@ -130,6 +151,19 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertAlmostEqual(float(data[east_vol_idx]), 0.11, places=2)
         self.assertAlmostEqual(float(data[west_vol_idx]), 0.11, places=2)
         self.assertAlmostEqual(float(data[bmi_idx]), -0.49, places=2)
+
+        same_heya_idx = headers.index("same_heya")
+        same_shusshin_idx = headers.index("same_shusshin")
+        east_heya_idx = headers.index("east_heya")
+        west_heya_idx = headers.index("west_heya")
+        east_shusshin_idx = headers.index("east_shusshin")
+        west_shusshin_idx = headers.index("west_shusshin")
+        self.assertEqual(int(data[same_heya_idx]), 0)
+        self.assertEqual(int(data[same_shusshin_idx]), 0)
+        self.assertEqual(int(data[east_heya_idx]), 1)
+        self.assertEqual(int(data[west_heya_idx]), 0)
+        self.assertEqual(int(data[east_shusshin_idx]), 1)
+        self.assertEqual(int(data[west_shusshin_idx]), 0)
 
     def test_query_count_small(self):
         """Exporting multiple bouts should use only a few queries."""
