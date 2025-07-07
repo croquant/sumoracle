@@ -2,7 +2,7 @@ import csv
 from datetime import date
 
 from app.management.commands import AsyncBaseCommand
-from app.models import BashoHistory, BashoRating, Bout
+from app.models import BashoHistory, BashoRating, Bout, Heya, Shusshin
 
 
 class Command(AsyncBaseCommand):
@@ -14,6 +14,21 @@ class Command(AsyncBaseCommand):
         parser.add_argument("outfile", help="CSV file path")
 
     async def run(self, outfile, **options):
+        heya_slugs = [
+            s
+            async for s in Heya.objects.order_by("slug").values_list(
+                "slug", flat=True
+            )
+        ]
+        shusshin_slugs = [
+            s
+            async for s in Shusshin.objects.order_by("slug").values_list(
+                "slug", flat=True
+            )
+        ]
+        heya_map = {slug: idx for idx, slug in enumerate(heya_slugs)}
+        shusshin_map = {slug: idx for idx, slug in enumerate(shusshin_slugs)}
+
         headers = [
             "year",
             "month",
@@ -52,8 +67,14 @@ class Command(AsyncBaseCommand):
             "rd_diff",
             "vol_diff",
             "bmi_diff",
-            "east_win",
+            "same_heya",
+            "same_shusshin",
+            "east_heya",
+            "west_heya",
+            "east_shusshin",
+            "west_shusshin",
         ]
+        headers.append("east_win")
         with open(outfile, "w", newline="") as fh:
             writer = csv.writer(fh)
             writer.writerow(headers)
@@ -75,8 +96,10 @@ class Command(AsyncBaseCommand):
             self.stdout.write("Querying bouts...")
             qs = Bout.objects.select_related(
                 "basho",
-                "east",
-                "west",
+                "east__heya",
+                "west__heya",
+                "east__shusshin",
+                "west__shusshin",
                 "division",
             ).order_by(
                 "basho__year",
@@ -220,6 +243,42 @@ class Command(AsyncBaseCommand):
                     else ""
                 )
 
+                same_heya = (
+                    1
+                    if bout.east.heya_id
+                    and bout.west.heya_id
+                    and bout.east.heya_id == bout.west.heya_id
+                    else 0
+                )
+                same_shusshin = (
+                    1
+                    if bout.east.shusshin_id
+                    and bout.west.shusshin_id
+                    and bout.east.shusshin_id == bout.west.shusshin_id
+                    else 0
+                )
+
+                east_heya = (
+                    heya_map.get(bout.east.heya.slug)
+                    if bout.east.heya_id
+                    else ""
+                )
+                west_heya = (
+                    heya_map.get(bout.west.heya.slug)
+                    if bout.west.heya_id
+                    else ""
+                )
+                east_shusshin = (
+                    shusshin_map.get(bout.east.shusshin.slug)
+                    if bout.east.shusshin_id
+                    else ""
+                )
+                west_shusshin = (
+                    shusshin_map.get(bout.west.shusshin.slug)
+                    if bout.west.shusshin_id
+                    else ""
+                )
+
                 writer.writerow(
                     [
                         bout.basho.year,
@@ -263,6 +322,12 @@ class Command(AsyncBaseCommand):
                         rd_diff,
                         vol_diff,
                         bmi_diff,
+                        same_heya,
+                        same_shusshin,
+                        east_heya,
+                        west_heya,
+                        east_shusshin,
+                        west_shusshin,
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
