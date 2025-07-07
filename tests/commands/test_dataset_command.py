@@ -109,11 +109,27 @@ class DatasetCommandTests(TransactionTestCase):
         weight_idx = headers.index("weight_diff")
         age_idx = headers.index("age_diff")
         exp_idx = headers.index("experience_diff")
+        rank_idx = headers.index("rank_diff")
+        rd_idx = headers.index("rd_diff")
+        vol_idx = headers.index("vol_diff")
+        east_rd_idx = headers.index("east_rd")
+        west_rd_idx = headers.index("west_rd")
+        east_vol_idx = headers.index("east_vol")
+        west_vol_idx = headers.index("west_vol")
+        bmi_idx = headers.index("bmi_diff")
         self.assertEqual(float(data[rating_idx]), 0)
         self.assertEqual(float(data[height_idx]), -2)
         self.assertEqual(float(data[weight_idx]), -5)
         self.assertEqual(data[age_idx], "")
         self.assertEqual(data[exp_idx], "")
+        self.assertEqual(float(data[rank_idx]), 0)
+        self.assertEqual(float(data[rd_idx]), 0)
+        self.assertEqual(float(data[vol_idx]), 0)
+        self.assertEqual(float(data[east_rd_idx]), 350)
+        self.assertEqual(float(data[west_rd_idx]), 350)
+        self.assertAlmostEqual(float(data[east_vol_idx]), 0.11, places=2)
+        self.assertAlmostEqual(float(data[west_vol_idx]), 0.11, places=2)
+        self.assertAlmostEqual(float(data[bmi_idx]), -0.49, places=2)
 
     def test_query_count_small(self):
         """Exporting multiple bouts should use only a few queries."""
@@ -162,8 +178,10 @@ class DatasetCommandTests(TransactionTestCase):
         data = rows[1]
         east_idx = headers.index("east_bmi")
         west_idx = headers.index("west_bmi")
+        diff_idx = headers.index("bmi_diff")
         self.assertEqual(float(data[east_idx]), 46.3)
         self.assertAlmostEqual(float(data[west_idx]), 46.79, places=2)
+        self.assertAlmostEqual(float(data[diff_idx]), -0.49, places=2)
 
     def test_head_to_head_records(self):
         prev = Basho.objects.create(
@@ -241,6 +259,12 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(target[headers.index("east_height")], "")
         self.assertEqual(target[headers.index("west_weight")], "")
         self.assertEqual(target[headers.index("height_diff")], "")
+        self.assertEqual(target[headers.index("rank_diff")], "")
+        self.assertEqual(target[headers.index("east_rd")], "")
+        self.assertEqual(target[headers.index("west_rd")], "")
+        self.assertEqual(target[headers.index("east_vol")], "")
+        self.assertEqual(target[headers.index("west_vol")], "")
+        self.assertEqual(target[headers.index("bmi_diff")], "")
 
     def test_missing_rating(self):
         """Rows should handle bouts missing ``BashoRating`` entries."""
@@ -289,3 +313,9 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(target[headers.index("east_rating")], "")
         self.assertEqual(target[headers.index("west_rating")], "")
         self.assertEqual(target[headers.index("rating_diff")], "")
+        self.assertEqual(target[headers.index("rd_diff")], "")
+        self.assertEqual(target[headers.index("vol_diff")], "")
+        self.assertEqual(target[headers.index("east_rd")], "")
+        self.assertEqual(target[headers.index("west_rd")], "")
+        self.assertEqual(target[headers.index("east_vol")], "")
+        self.assertEqual(target[headers.index("west_vol")], "")
