@@ -73,6 +73,14 @@ class AsyncBaseCommand(BaseCommand):
 
 See `app/management/commands/` for the concrete implementations.
 
+## Dataset generation
+
+Use `manage.py dataset OUTFILE` to write a CSV of bout features. The
+command accepts optional filtering flags to limit the exported rows. After
+producing the file you can run `manage.py select_features INFILE OUTFILE` to
+reduce the columns based on ANOVA F-scores. These utilities require
+`scikit-learn` and `pandas` which are provided in `requirements.txt`.
+
 ## API
 
 The Ninja API lives at `/api/` with routers for rikishi, divisions and
