@@ -41,17 +41,6 @@ basho results.
    python manage.py runserver
    ```
 
-## Docker
-
-A `Dockerfile` and `docker-compose.yml` are provided.  The stack runs the
-web server and a Postgres container.
-
-```bash
-docker compose up
-```
-
-The entrypoint waits for the database and applies migrations before
-starting Gunicorn.
 
 ## Management commands
 
