@@ -45,13 +45,23 @@ class Command(AsyncBaseCommand):
         # remove identifiers that leak match info
         X = X.drop(columns=["east_id", "west_id"], errors="ignore")
 
-        # convert possible numeric strings to numbers
-        X = X.apply(pd.to_numeric, errors="ignore")
+        # convert possible numeric strings to numbers without deprecated
+        # errors="ignore" argument
+        for col in X.select_dtypes(include="object").columns:
+            try:
+                X[col] = pd.to_numeric(X[col])
+            except (ValueError, TypeError):
+                continue
 
-        # treat ranks and divisions as categorical for one-hot encoding
-        for col in ("east_rank", "west_rank", "division"):
-            if col in X.columns:
-                X[col] = X[col].astype("category")
+        # one-hot encode rank and division columns early
+        early_cols = [
+            c for c in ("east_rank", "west_rank", "division") if c in X.columns
+        ]
+        if early_cols:
+            X[early_cols] = X[early_cols].astype("category")
+            X = pd.get_dummies(
+                X, columns=early_cols, drop_first=True, dtype=np.int8
+            )
 
         # drop columns with too many missing values
         miss = X.isnull().mean()
@@ -74,13 +84,18 @@ class Command(AsyncBaseCommand):
 
         X = pd.get_dummies(X, columns=cat_cols, drop_first=True, dtype=np.int8)
 
-        sample = X if len(X) <= 5000 else X.sample(5000, random_state=42)
-        corr = sample.corr().abs()
-        upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
-        to_drop = [c for c in upper.columns if any(upper[c] > 0.9)]
-        if to_drop:
-            X = X.drop(columns=to_drop)
-            self.stdout.write(f"Dropped {len(to_drop)} correlated cols")
+        if X.shape[1] <= 10000:
+            sample = X if len(X) <= 5000 else X.sample(5000, random_state=42)
+            corr = sample.corr().abs()
+            upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
+            to_drop = [c for c in upper.columns if any(upper[c] > 0.9)]
+            if to_drop:
+                X = X.drop(columns=to_drop)
+                self.stdout.write(f"Dropped {len(to_drop)} correlated cols")
+        else:
+            self.stdout.write(
+                f"Skipping correlation step for {X.shape[1]} features"
+            )
 
         stratify = y if y.nunique() > 1 else None
         X_train, _x, y_train, _y = train_test_split(
