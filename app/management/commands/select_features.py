@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import yaml
 from django.core.management.base import CommandError
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.model_selection import train_test_split
@@ -21,9 +22,18 @@ class Command(AsyncBaseCommand):
         parser.add_argument(
             "--k", type=int, default=20, help="Number of features to keep"
         )
+        parser.add_argument(
+            "--meta",
+            help="Optional YAML file path to save selected features and scaler",
+        )
 
     async def run(
-        self, infile: str, outfile: str | None = None, k: int = 20, **options
+        self,
+        infile: str,
+        outfile: str | None = None,
+        k: int = 20,
+        meta: str | None = None,
+        **options,
     ):
         df = pd.read_csv(infile)
         if "east_win" not in df.columns:
@@ -32,8 +42,16 @@ class Command(AsyncBaseCommand):
         X = df.drop("east_win", axis=1)
         y = df["east_win"]
 
+        # remove identifiers that leak match info
+        X = X.drop(columns=["east_id", "west_id"], errors="ignore")
+
         # convert possible numeric strings to numbers
         X = X.apply(pd.to_numeric, errors="ignore")
+
+        # treat ranks and divisions as categorical for one-hot encoding
+        for col in ("east_rank", "west_rank", "division"):
+            if col in X.columns:
+                X[col] = X[col].astype("category")
 
         # drop columns with too many missing values
         miss = X.isnull().mean()
@@ -90,3 +108,15 @@ class Command(AsyncBaseCommand):
         if outfile:
             df[selected.tolist() + ["east_win"]].to_csv(outfile, index=False)
             self.stdout.write(self.style.SUCCESS(f"Saved to {outfile}"))
+
+        if meta:
+            meta_data = {
+                "features": selected.tolist(),
+                "scaler": {
+                    "mean": scaler.mean_.tolist(),
+                    "scale": scaler.scale_.tolist(),
+                },
+            }
+            with open(meta, "w") as fh:
+                yaml.safe_dump(meta_data, fh)
+            self.stdout.write(self.style.SUCCESS(f"Metadata saved to {meta}"))
