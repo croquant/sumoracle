@@ -165,6 +165,19 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(int(data[east_shusshin_idx]), 1)
         self.assertEqual(int(data[west_shusshin_idx]), 0)
 
+        east_win_rate_idx = headers.index("east_win_rate")
+        west_win_rate_idx = headers.index("west_win_rate")
+        east_streak_idx = headers.index("east_streak")
+        west_streak_idx = headers.index("west_streak")
+        east_change_idx = headers.index("east_avg_rating_change")
+        west_change_idx = headers.index("west_avg_rating_change")
+        self.assertEqual(float(data[east_win_rate_idx]), 0)
+        self.assertEqual(float(data[west_win_rate_idx]), 0)
+        self.assertEqual(int(data[east_streak_idx]), 0)
+        self.assertEqual(int(data[west_streak_idx]), 0)
+        self.assertEqual(float(data[east_change_idx]), 0)
+        self.assertEqual(float(data[west_change_idx]), 0)
+
     def test_query_count_small(self):
         """Exporting multiple bouts should use only a few queries."""
         division, _ = Division.objects.get_or_create(
@@ -298,7 +311,76 @@ class DatasetCommandTests(TransactionTestCase):
         self.assertEqual(target[headers.index("west_rd")], "")
         self.assertEqual(target[headers.index("east_vol")], "")
         self.assertEqual(target[headers.index("west_vol")], "")
-        self.assertEqual(target[headers.index("bmi_diff")], "")
+
+    def test_rolling_statistics(self):
+        prev = Basho.objects.create(
+            year=2024,
+            month=11,
+            start_date=date(2024, 11, 10),
+        )
+        division = Division.objects.get(name="Makuuchi")
+        BashoHistory.objects.create(rikishi=self.r1, basho=prev, rank=self.rank)
+        BashoHistory.objects.create(rikishi=self.r2, basho=prev, rank=self.rank)
+        BashoRating.objects.create(
+            rikishi=self.r1,
+            basho=prev,
+            rating=1520.0,
+            rd=200.0,
+            vol=0.06,
+        )
+        BashoRating.objects.create(
+            rikishi=self.r2,
+            basho=prev,
+            rating=1480.0,
+            rd=210.0,
+            vol=0.06,
+        )
+        Bout.objects.create(
+            basho=prev,
+            division=division,
+            day=1,
+            match_no=1,
+            east=self.r2,
+            west=self.r1,
+            east_shikona="B",
+            west_shikona="A",
+            kimarite="yorikiri",
+            winner=self.r2,
+        )
+        rating1 = BashoRating.objects.get(rikishi=self.r1, basho=self.basho)
+        rating2 = BashoRating.objects.get(rikishi=self.r2, basho=self.basho)
+        rating1.previous_rating = 1520.0
+        rating1.rating = 1540.0
+        rating1.save()
+        rating2.previous_rating = 1480.0
+        rating2.rating = 1470.0
+        rating2.save()
+
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            path = tmp.name
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            call_command("dataset", path)
+        finally:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            loop.close()
+        with open(path) as fh:
+            rows = list(csv.reader(fh))
+        headers = rows[0]
+        target = next(row for row in rows[1:] if row[0] == "2025")
+        e_wr_idx = headers.index("east_win_rate")
+        w_wr_idx = headers.index("west_win_rate")
+        e_streak_idx = headers.index("east_streak")
+        w_streak_idx = headers.index("west_streak")
+        e_delta_idx = headers.index("east_avg_rating_change")
+        w_delta_idx = headers.index("west_avg_rating_change")
+        self.assertEqual(float(target[e_wr_idx]), 0.0)
+        self.assertEqual(float(target[w_wr_idx]), 1.0)
+        self.assertEqual(int(target[e_streak_idx]), 0)
+        self.assertEqual(int(target[w_streak_idx]), 1)
+        self.assertEqual(float(target[e_delta_idx]), 20.0)
+        self.assertEqual(float(target[w_delta_idx]), -20.0)
 
     def test_missing_rating(self):
         """Rows should handle bouts missing ``BashoRating`` entries."""
