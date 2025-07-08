@@ -64,17 +64,18 @@ class Command(AsyncBaseCommand):
         num_cols = X.select_dtypes(include="number").columns
         cat_cols = X.select_dtypes(exclude="number").columns
 
-        for col in num_cols:
-            if X[col].isnull().any():
-                X[col] = X[col].fillna(X[col].median())
+        if len(num_cols):
+            medians = X[num_cols].median()
+            X[num_cols] = X[num_cols].fillna(medians)
 
-        for col in cat_cols:
-            if X[col].isnull().any():
-                mode = X[col].mode().dropna()
-                X[col] = X[col].fillna(mode[0] if not mode.empty else "missing")
-        X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
+        if len(cat_cols):
+            modes = X[cat_cols].mode().iloc[0]
+            X[cat_cols] = X[cat_cols].fillna(modes).astype("category")
 
-        corr = X.corr().abs()
+        X = pd.get_dummies(X, columns=cat_cols, drop_first=True, dtype=np.int8)
+
+        sample = X if len(X) <= 5000 else X.sample(5000, random_state=42)
+        corr = sample.corr().abs()
         upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
         to_drop = [c for c in upper.columns if any(upper[c] > 0.9)]
         if to_drop:
