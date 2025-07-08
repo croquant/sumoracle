@@ -80,18 +80,16 @@ class Command(AsyncBaseCommand):
             writer.writerow(headers)
 
             self.stdout.write("Querying basho histories...")
-            histories = [
-                h
-                async for h in BashoHistory.objects.select_related(
-                    "rank__division"
-                )
-            ]
+            hist_map: dict[tuple[int, int], BashoHistory] = {}
+            async for hist in BashoHistory.objects.select_related(
+                "rank__division"
+            ).aiterator(chunk_size=1000):
+                hist_map[(hist.rikishi_id, hist.basho_id)] = hist
 
             self.stdout.write("Querying ratings...")
-            ratings = [r async for r in BashoRating.objects.all()]
-
-            hist_map = {(h.rikishi_id, h.basho_id): h for h in histories}
-            rating_map = {(r.rikishi_id, r.basho_id): r for r in ratings}
+            rating_map: dict[tuple[int, int], BashoRating] = {}
+            async for rating in BashoRating.objects.aiterator(chunk_size=1000):
+                rating_map[(rating.rikishi_id, rating.basho_id)] = rating
 
             self.stdout.write("Querying bouts...")
             qs = Bout.objects.select_related(
