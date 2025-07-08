@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import yaml
 from django.core.management.base import CommandError
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.model_selection import train_test_split
@@ -21,9 +22,18 @@ class Command(AsyncBaseCommand):
         parser.add_argument(
             "--k", type=int, default=20, help="Number of features to keep"
         )
+        parser.add_argument(
+            "--meta",
+            help="Optional YAML file path to save selected features and scaler",
+        )
 
     async def run(
-        self, infile: str, outfile: str | None = None, k: int = 20, **options
+        self,
+        infile: str,
+        outfile: str | None = None,
+        k: int = 20,
+        meta: str | None = None,
+        **options,
     ):
         df = pd.read_csv(infile)
         if "east_win" not in df.columns:
@@ -32,8 +42,26 @@ class Command(AsyncBaseCommand):
         X = df.drop("east_win", axis=1)
         y = df["east_win"]
 
-        # convert possible numeric strings to numbers
-        X = X.apply(pd.to_numeric, errors="ignore")
+        # remove identifiers that leak match info
+        X = X.drop(columns=["east_id", "west_id"], errors="ignore")
+
+        # convert possible numeric strings to numbers without deprecated
+        # errors="ignore" argument
+        for col in X.select_dtypes(include="object").columns:
+            try:
+                X[col] = pd.to_numeric(X[col])
+            except (ValueError, TypeError):
+                continue
+
+        # one-hot encode rank and division columns early
+        early_cols = [
+            c for c in ("east_rank", "west_rank", "division") if c in X.columns
+        ]
+        if early_cols:
+            X[early_cols] = X[early_cols].astype("category")
+            X = pd.get_dummies(
+                X, columns=early_cols, drop_first=True, dtype=np.int8
+            )
 
         # drop columns with too many missing values
         miss = X.isnull().mean()
@@ -46,22 +74,28 @@ class Command(AsyncBaseCommand):
         num_cols = X.select_dtypes(include="number").columns
         cat_cols = X.select_dtypes(exclude="number").columns
 
-        for col in num_cols:
-            if X[col].isnull().any():
-                X[col] = X[col].fillna(X[col].median())
+        if len(num_cols):
+            medians = X[num_cols].median()
+            X[num_cols] = X[num_cols].fillna(medians)
 
-        for col in cat_cols:
-            if X[col].isnull().any():
-                mode = X[col].mode().dropna()
-                X[col] = X[col].fillna(mode[0] if not mode.empty else "missing")
-        X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
+        if len(cat_cols):
+            modes = X[cat_cols].mode().iloc[0]
+            X[cat_cols] = X[cat_cols].fillna(modes).astype("category")
 
-        corr = X.corr().abs()
-        upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
-        to_drop = [c for c in upper.columns if any(upper[c] > 0.9)]
-        if to_drop:
-            X = X.drop(columns=to_drop)
-            self.stdout.write(f"Dropped {len(to_drop)} correlated cols")
+        X = pd.get_dummies(X, columns=cat_cols, drop_first=True, dtype=np.int8)
+
+        if X.shape[1] <= 10000:
+            sample = X if len(X) <= 5000 else X.sample(5000, random_state=42)
+            corr = sample.corr().abs()
+            upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
+            to_drop = [c for c in upper.columns if any(upper[c] > 0.9)]
+            if to_drop:
+                X = X.drop(columns=to_drop)
+                self.stdout.write(f"Dropped {len(to_drop)} correlated cols")
+        else:
+            self.stdout.write(
+                f"Skipping correlation step for {X.shape[1]} features"
+            )
 
         stratify = y if y.nunique() > 1 else None
         X_train, _x, y_train, _y = train_test_split(
@@ -90,3 +124,15 @@ class Command(AsyncBaseCommand):
         if outfile:
             df[selected.tolist() + ["east_win"]].to_csv(outfile, index=False)
             self.stdout.write(self.style.SUCCESS(f"Saved to {outfile}"))
+
+        if meta:
+            meta_data = {
+                "features": selected.tolist(),
+                "scaler": {
+                    "mean": scaler.mean_.tolist(),
+                    "scale": scaler.scale_.tolist(),
+                },
+            }
+            with open(meta, "w") as fh:
+                yaml.safe_dump(meta_data, fh)
+            self.stdout.write(self.style.SUCCESS(f"Metadata saved to {meta}"))
