@@ -1,8 +1,10 @@
 import csv
+from collections import defaultdict, deque
 from datetime import date
 
 from app.management.commands import AsyncBaseCommand
 from app.models import BashoHistory, BashoRating, Bout, Heya, Shusshin
+from libs.constants import RECENT_BOUT_WINDOW
 
 
 class Command(AsyncBaseCommand):
@@ -73,6 +75,12 @@ class Command(AsyncBaseCommand):
             "west_heya",
             "east_shusshin",
             "west_shusshin",
+            "east_win_rate",
+            "west_win_rate",
+            "east_streak",
+            "west_streak",
+            "east_avg_rating_change",
+            "west_avg_rating_change",
         ]
         headers.append("east_win")
         with open(outfile, "w", newline="") as fh:
@@ -88,8 +96,20 @@ class Command(AsyncBaseCommand):
 
             self.stdout.write("Querying ratings...")
             rating_map: dict[tuple[int, int], BashoRating] = {}
-            async for rating in BashoRating.objects.aiterator(chunk_size=1000):
+            rating_history: dict[int, list[BashoRating]] = defaultdict(list)
+            rating_qs = BashoRating.objects.select_related("basho")
+            async for rating in rating_qs.aiterator(chunk_size=1000):
                 rating_map[(rating.rikishi_id, rating.basho_id)] = rating
+                rating_history[rating.rikishi_id].append(rating)
+
+            avg_change_map: dict[tuple[int, int], float] = {}
+            for rikishi_id, ratings in rating_history.items():
+                ratings.sort(key=lambda r: (r.basho.year, r.basho.month))
+                changes: deque[float] = deque(maxlen=3)
+                for rec in ratings:
+                    avg = sum(changes) / len(changes) if changes else 0.0
+                    avg_change_map[(rikishi_id, rec.basho_id)] = round(avg, 2)
+                    changes.append(rec.rating - rec.previous_rating)
 
             self.stdout.write("Querying bouts...")
             qs = Bout.objects.select_related(
@@ -111,6 +131,10 @@ class Command(AsyncBaseCommand):
             step = 1000
             totals_map: dict[tuple[int, int], dict[int, int]] = {}
             start_map: dict[tuple[int, int, date], dict[int, int]] = {}
+            recent_results: defaultdict[int, deque[int]] = defaultdict(
+                lambda: deque(maxlen=RECENT_BOUT_WINDOW)
+            )
+            streaks: defaultdict[int, int] = defaultdict(int)
 
             async for bout in qs.aiterator(chunk_size=1000):
                 start = bout.basho.start_date or date(
@@ -134,6 +158,29 @@ class Command(AsyncBaseCommand):
                 west_hist = hist_map.get((bout.west_id, bout.basho_id))
                 east_rating = rating_map.get((bout.east_id, bout.basho_id))
                 west_rating = rating_map.get((bout.west_id, bout.basho_id))
+
+                east_win_rate = (
+                    sum(recent_results[bout.east_id])
+                    / len(recent_results[bout.east_id])
+                    if recent_results[bout.east_id]
+                    else 0.0
+                )
+                west_win_rate = (
+                    sum(recent_results[bout.west_id])
+                    / len(recent_results[bout.west_id])
+                    if recent_results[bout.west_id]
+                    else 0.0
+                )
+                east_streak = streaks[bout.east_id]
+                west_streak = streaks[bout.west_id]
+                east_avg_change = avg_change_map.get(
+                    (bout.east_id, bout.basho_id),
+                    0.0,
+                )
+                west_avg_change = avg_change_map.get(
+                    (bout.west_id, bout.basho_id),
+                    0.0,
+                )
 
                 east_record = prior_counts.get(bout.east_id, 0)
                 west_record = prior_counts.get(bout.west_id, 0)
@@ -326,11 +373,29 @@ class Command(AsyncBaseCommand):
                         west_heya,
                         east_shusshin,
                         west_shusshin,
+                        round(east_win_rate, 3),
+                        round(west_win_rate, 3),
+                        east_streak,
+                        west_streak,
+                        east_avg_change,
+                        west_avg_change,
                         1 if bout.winner_id == bout.east_id else 0,
                     ]
                 )
 
                 totals[bout.winner_id] = totals.get(bout.winner_id, 0) + 1
+                recent_results[bout.east_id].append(
+                    1 if bout.winner_id == bout.east_id else 0
+                )
+                recent_results[bout.west_id].append(
+                    1 if bout.winner_id == bout.west_id else 0
+                )
+                if bout.winner_id == bout.east_id:
+                    streaks[bout.east_id] += 1
+                    streaks[bout.west_id] = 0
+                else:
+                    streaks[bout.west_id] += 1
+                    streaks[bout.east_id] = 0
 
                 processed += 1
                 if processed % step == 0:
