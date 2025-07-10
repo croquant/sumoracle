@@ -72,14 +72,15 @@ class NNPredictCommandTests(TestCase):
                 "rd_diff",
                 "height_diff",
                 "weight_diff",
+                "bmi_diff",
                 "age_diff",
                 "experience_diff",
                 "record_diff",
                 "east_win",
             ]
         )
-        writer.writerow([10, 0, 0, 0, 0, 0, 0, 0, 1])
-        writer.writerow([-10, 0, 0, 0, 0, 0, 0, 0, 0])
+        writer.writerow([10, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+        writer.writerow([-10, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         self.dataset.close()
 
     def tearDown(self):
