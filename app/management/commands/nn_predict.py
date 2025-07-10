@@ -4,10 +4,29 @@ from itertools import combinations
 
 import pandas as pd
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Q
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 
-from app.models import Basho, BashoHistory, BashoRating, Prediction, Rikishi
+from app.models import (
+    Basho,
+    BashoHistory,
+    BashoRating,
+    Bout,
+    Prediction,
+    Rikishi,
+)
+
+FEATURES = [
+    "rating_diff",
+    "rank_diff",
+    "rd_diff",
+    "height_diff",
+    "weight_diff",
+    "age_diff",
+    "experience_diff",
+    "record_diff",
+]
 
 
 class Command(BaseCommand):
@@ -19,31 +38,12 @@ class Command(BaseCommand):
 
     def handle(self, dataset, iterations, *args, **options):
         df = pd.read_csv(dataset)
-        required = [
-            "rating_diff",
-            "rank_diff",
-            "rd_diff",
-            "height_diff",
-            "weight_diff",
-            "age_diff",
-            "experience_diff",
-            "east_win",
-        ]
+        required = FEATURES + ["east_win"]
         if not all(col in df.columns for col in required):
             raise CommandError("Dataset missing required columns")
         df = df.dropna(subset=required)
-        X = df[
-            [
-                "rating_diff",
-                "rank_diff",
-                "rd_diff",
-                "height_diff",
-                "weight_diff",
-                "age_diff",
-                "experience_diff",
-            ]
-        ].astype(float)
-        y = df["east_win"].astype(int)
+        X = df[FEATURES].astype(float).to_numpy()
+        y = df["east_win"].astype(int).to_numpy()
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
@@ -115,6 +115,18 @@ class Command(BaseCommand):
                 )
                 exp1 = (start - r1.debut).days / 365.25 if r1.debut else None
                 exp2 = (start - r2.debut).days / 365.25 if r2.debut else None
+                bouts = Bout.objects.filter(
+                    Q(east_id=r1.id, west_id=r2.id)
+                    | Q(east_id=r2.id, west_id=r1.id),
+                    Q(basho__year__lt=next_basho.year)
+                    | Q(
+                        basho__year=next_basho.year,
+                        basho__month__lt=next_basho.month,
+                    ),
+                )
+                wins1 = bouts.filter(winner=r1).count()
+                wins2 = bouts.filter(winner=r2).count()
+                rec_diff = wins1 - wins2
                 feat = [
                     rating1.rating - rating2.rating,
                     history1.rank.value - history2.rank.value,
@@ -131,6 +143,7 @@ class Command(BaseCommand):
                         if exp1 is not None and exp2 is not None
                         else 0
                     ),
+                    rec_diff,
                 ]
                 feat = scaler.transform([feat])
                 p = float(model.predict_proba(feat)[0, 1])
