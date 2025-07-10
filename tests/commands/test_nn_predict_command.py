@@ -1,6 +1,8 @@
 import csv
 import os
 import tempfile
+from io import StringIO
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -96,3 +98,49 @@ class NNPredictCommandTests(TestCase):
         for p in preds:
             self.assertGreaterEqual(p.wins, 0)
             self.assertLessEqual(p.wins, 15)
+
+    def test_cv_option_uses_grid_search(self):
+        out = StringIO()
+
+        class DummyClf:
+            def fit(self, X, y):
+                return self
+
+            def predict_proba(self, X):
+                import numpy as np
+
+                return np.array([[0.4, 0.6] for _ in range(len(X))])
+
+        class DummyGS:
+            def __init__(self, estimator, *args, **kwargs):
+                self.best_estimator_ = estimator
+                self.best_params_ = {"foo": 1}
+                self.best_score_ = 0.5
+
+            def fit(self, X, y):
+                self.best_estimator_.fit(X, y)
+                return self
+
+        with (
+            patch(
+                "app.management.commands.nn_predict.MLPClassifier",
+                return_value=DummyClf(),
+            ),
+            patch(
+                "app.management.commands.nn_predict.GridSearchCV",
+                DummyGS,
+            ),
+        ):
+            call_command(
+                "nn_predict",
+                self.dataset.name,
+                "--iterations",
+                "1",
+                "--cv",
+                "2",
+                stdout=out,
+            )
+
+        self.assertIn("Best params", out.getvalue())
+        preds = Prediction.objects.filter(basho=self.b2)
+        self.assertEqual(preds.count(), 2)
