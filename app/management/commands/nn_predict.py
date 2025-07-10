@@ -5,7 +5,9 @@ from itertools import combinations
 import pandas as pd
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
+from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from app.models import (
@@ -36,8 +38,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("dataset", help="CSV training dataset")
         parser.add_argument("--iterations", type=int, default=10000)
+        parser.add_argument(
+            "--cv",
+            type=int,
+            default=0,
+            help="Run GridSearchCV with given number of folds",
+        )
 
-    def handle(self, dataset, iterations, *args, **options):
+    def handle(self, dataset, iterations, cv=0, *args, **options):
         df = pd.read_csv(dataset)
         required = FEATURES + ["east_win"]
         if not all(col in df.columns for col in required):
@@ -46,14 +54,39 @@ class Command(BaseCommand):
         X = df[FEATURES].astype(float).to_numpy()
         y = df["east_win"].astype(int).to_numpy()
 
-        scaler = StandardScaler()
-        print(X.shape, y.shape)
-        X_scaled = scaler.fit_transform(X)
-
-        model = MLPClassifier(
-            hidden_layer_sizes=(10,), max_iter=200, random_state=42
-        )
-        model.fit(X_scaled, y)
+        if cv:
+            pipe = Pipeline(
+                [
+                    ("scaler", StandardScaler()),
+                    ("clf", MLPClassifier(random_state=42)),
+                ]
+            )
+            grid = GridSearchCV(
+                pipe,
+                {
+                    "clf__hidden_layer_sizes": [(10,), (20,)],
+                    "clf__alpha": [0.0001, 0.001],
+                    "clf__max_iter": [200, 400],
+                },
+                cv=cv,
+                n_jobs=1,
+            )
+            grid.fit(X, y)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Best params: {grid.best_params_} score: "
+                    f"{grid.best_score_:.3f}"
+                )
+            )
+            scaler = grid.best_estimator_.named_steps["scaler"]
+            model = grid.best_estimator_.named_steps["clf"]
+        else:
+            scaler = StandardScaler().fit(X)
+            X_scaled = scaler.transform(X)
+            model = MLPClassifier(
+                hidden_layer_sizes=(10,), max_iter=200, random_state=42
+            )
+            model.fit(X_scaled, y)
 
         next_basho = (
             Basho.objects.filter(bouts__isnull=True)
