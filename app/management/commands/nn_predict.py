@@ -23,6 +23,7 @@ FEATURES = [
     "rd_diff",
     "height_diff",
     "weight_diff",
+    "bmi_diff",
     "age_diff",
     "experience_diff",
     "record_diff",
@@ -34,7 +35,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("dataset", help="CSV training dataset")
-        parser.add_argument("--iterations", type=int, default=1000)
+        parser.add_argument("--iterations", type=int, default=10000)
 
     def handle(self, dataset, iterations, *args, **options):
         df = pd.read_csv(dataset)
@@ -46,6 +47,7 @@ class Command(BaseCommand):
         y = df["east_win"].astype(int).to_numpy()
 
         scaler = StandardScaler()
+        print(X.shape, y.shape)
         X_scaled = scaler.fit_transform(X)
 
         model = MLPClassifier(
@@ -103,6 +105,8 @@ class Command(BaseCommand):
                 h2 = history2.height or r2.height or 0
                 w1 = history1.weight or r1.weight or 0
                 w2 = history2.weight or r2.weight or 0
+                bmi1 = round(w1 / ((h1 / 100) ** 2), 2) if h1 and w1 else 0
+                bmi2 = round(w2 / ((h2 / 100) ** 2), 2) if h2 and w2 else 0
                 age1 = (
                     (start - r1.birth_date).days / 365.25
                     if r1.birth_date
@@ -133,6 +137,7 @@ class Command(BaseCommand):
                     rating1.rd - rating2.rd,
                     h1 - h2,
                     w1 - w2,
+                    bmi1 - bmi2,
                     (
                         age1 - age2
                         if age1 is not None and age2 is not None
@@ -166,6 +171,7 @@ class Command(BaseCommand):
                 records[r1.id]["total"] += 1
                 records[r2.id]["total"] += 1
 
+        # Compute predicted wins
         for rec in records.values():
             total = rec["total"]
             win_rate = rec["wins"] / total if total else 0
@@ -175,6 +181,16 @@ class Command(BaseCommand):
                 basho=next_basho,
                 defaults={"wins": rec["pred_wins"]},
             )
+        # Sort by predicted wins descending
+        sorted_records = sorted(
+            records.values(), key=lambda r: r["pred_wins"], reverse=True
+        )
+        self.stdout.write(f"Predictions for {next_basho}:")
+        for rec in sorted_records:
             self.stdout.write(
-                f"{rec['obj'].name: <12} {rec['pred_wins']:.2f} wins"
+                (
+                    f"{rec['obj'].rank.short_name()} "
+                    f"{rec['obj'].name: <12} "
+                    f"{rec['pred_wins']:.2f} wins"
+                )
             )
