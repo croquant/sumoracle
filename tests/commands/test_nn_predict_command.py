@@ -65,9 +65,20 @@ class NNPredictCommandTests(TestCase):
         )
         self.dataset = tempfile.NamedTemporaryFile("w", delete=False)
         writer = csv.writer(self.dataset)
-        writer.writerow(["rating_diff", "rank_diff", "rd_diff", "east_win"])
-        writer.writerow([10, 0, 0, 1])
-        writer.writerow([-10, 0, 0, 0])
+        writer.writerow(
+            [
+                "rating_diff",
+                "rank_diff",
+                "rd_diff",
+                "height_diff",
+                "weight_diff",
+                "age_diff",
+                "experience_diff",
+                "east_win",
+            ]
+        )
+        writer.writerow([10, 0, 0, 0, 0, 0, 0, 1])
+        writer.writerow([-10, 0, 0, 0, 0, 0, 0, 0])
         self.dataset.close()
 
     def tearDown(self):

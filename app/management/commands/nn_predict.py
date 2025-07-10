@@ -1,4 +1,5 @@
 import random
+from datetime import date
 from itertools import combinations
 
 import pandas as pd
@@ -18,11 +19,30 @@ class Command(BaseCommand):
 
     def handle(self, dataset, iterations, *args, **options):
         df = pd.read_csv(dataset)
-        required = ["rating_diff", "rank_diff", "rd_diff", "east_win"]
+        required = [
+            "rating_diff",
+            "rank_diff",
+            "rd_diff",
+            "height_diff",
+            "weight_diff",
+            "age_diff",
+            "experience_diff",
+            "east_win",
+        ]
         if not all(col in df.columns for col in required):
             raise CommandError("Dataset missing required columns")
         df = df.dropna(subset=required)
-        X = df[["rating_diff", "rank_diff", "rd_diff"]].astype(float)
+        X = df[
+            [
+                "rating_diff",
+                "rank_diff",
+                "rd_diff",
+                "height_diff",
+                "weight_diff",
+                "age_diff",
+                "experience_diff",
+            ]
+        ].astype(float)
         y = df["east_win"].astype(int)
 
         scaler = StandardScaler()
@@ -64,6 +84,10 @@ class Command(BaseCommand):
             for r in rikishi
         }
 
+        start = next_basho.start_date or date(
+            next_basho.year, next_basho.month, 1
+        )
+
         probs = {}
         for r1, r2 in combinations(rikishi, 2):
             if r1.heya_id and r1.heya_id == r2.heya_id:
@@ -75,10 +99,38 @@ class Command(BaseCommand):
             if not rating1 or not rating2 or not history1 or not history2:
                 p = 0.5
             else:
+                h1 = history1.height or r1.height or 0
+                h2 = history2.height or r2.height or 0
+                w1 = history1.weight or r1.weight or 0
+                w2 = history2.weight or r2.weight or 0
+                age1 = (
+                    (start - r1.birth_date).days / 365.25
+                    if r1.birth_date
+                    else None
+                )
+                age2 = (
+                    (start - r2.birth_date).days / 365.25
+                    if r2.birth_date
+                    else None
+                )
+                exp1 = (start - r1.debut).days / 365.25 if r1.debut else None
+                exp2 = (start - r2.debut).days / 365.25 if r2.debut else None
                 feat = [
                     rating1.rating - rating2.rating,
                     history1.rank.value - history2.rank.value,
                     rating1.rd - rating2.rd,
+                    h1 - h2,
+                    w1 - w2,
+                    (
+                        age1 - age2
+                        if age1 is not None and age2 is not None
+                        else 0
+                    ),
+                    (
+                        exp1 - exp2
+                        if exp1 is not None and exp2 is not None
+                        else 0
+                    ),
                 ]
                 feat = scaler.transform([feat])
                 p = float(model.predict_proba(feat)[0, 1])
