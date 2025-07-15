@@ -64,12 +64,19 @@ class Command(BaseCommand):
             grid = GridSearchCV(
                 pipe,
                 {
-                    "clf__hidden_layer_sizes": [(10,), (20,)],
-                    "clf__alpha": [0.0001, 0.001],
-                    "clf__max_iter": [200, 400],
+                    "clf__hidden_layer_sizes": [
+                        (32, 16),
+                        (64, 32, 16),
+                    ],
+                    "clf__alpha": [0.0001, 0.001, 0.01],
+                    "clf__learning_rate": ["constant"],
+                    "clf__max_iter": [200, 400, 1000],
+                    # early stopping to avoid needless epochs
+                    "clf__early_stopping": [True],
+                    "clf__validation_fraction": [0.1],
                 },
                 cv=cv,
-                n_jobs=1,
+                n_jobs=-1,
             )
             grid.fit(X, y)
             self.stdout.write(
