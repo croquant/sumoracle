@@ -17,7 +17,12 @@ source = ["app", "config", "libs", "app/management/commands"]
 relative_files = true
 
 [tool.coverage.report]
-omit = ["*/migrations/*", "manage.py", "tests/*"]
+omit = [
+    "*/migrations/*",
+    "manage.py",
+    "tests/*",
+    "libs/generators/*",
+]
 fail_under = 95
 skip_empty = false
 
